@@ -1,0 +1,10 @@
+bin/
+product/
+assets/bindata_assetfs.go
+agent.pkg
+agent.pkg.sha1sum
+coverage.txt
+coverage.html
+coverage-pretty.html
+contrib/tools/naive-license.pem
+license/server/bin/lic-server

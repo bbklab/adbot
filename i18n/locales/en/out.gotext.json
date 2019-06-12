@@ -1,0 +1,257 @@
+{
+    "language": "en",
+    "messages": [
+        {
+            "id": "unknown error",
+            "message": "unknown error",
+            "translation": "unknown error",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "there already has one super admin user",
+            "message": "there already has one super admin user",
+            "translation": "there already has one super admin user",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "param required",
+            "message": "param required",
+            "translation": "param required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "can't kick current session",
+            "message": "can't kick current session",
+            "translation": "can't kick current session",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "not this user session",
+            "message": "not this user session",
+            "translation": "not this user session",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the system is not ready for registering new ss user, pls contact the administrator",
+            "message": "the system is not ready for registering new ss user, pls contact the administrator",
+            "translation": "the system is not ready for registering new ss user, pls contact the administrator",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "no such email",
+            "message": "no such email",
+            "translation": "no such email",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "verify code required",
+            "message": "verify code required",
+            "translation": "verify code required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "verify code expired",
+            "message": "verify code expired",
+            "translation": "verify code expired",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "verify code mismatched",
+            "message": "verify code mismatched",
+            "translation": "verify code mismatched",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "ssuser login required",
+            "message": "ssuser login required",
+            "translation": "ssuser login required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "ssuser re-login required",
+            "message": "ssuser re-login required",
+            "translation": "ssuser re-login required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "ssuser session expired",
+            "message": "ssuser session expired",
+            "translation": "ssuser session expired",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "parameter plan \u0026 months required",
+            "message": "parameter plan \u0026 months required",
+            "translation": "parameter plan \u0026 months required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "parameter months must be positive",
+            "message": "parameter months must be positive",
+            "translation": "parameter months must be positive",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "authentication failed",
+            "message": "authentication failed",
+            "translation": "authentication failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "not a valid email address",
+            "message": "not a valid email address",
+            "translation": "not a valid email address",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the email already occupied",
+            "message": "the email already occupied",
+            "translation": "the email already occupied",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "no such email address registered",
+            "message": "no such email address registered",
+            "translation": "no such email address registered",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "can't renewall trial plan",
+            "message": "can't renewall trial plan",
+            "translation": "can't renewall trial plan",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the system primary payment service is not ready, pls contact the administrator",
+            "message": "the system primary payment service is not ready, pls contact the administrator",
+            "translation": "the system primary payment service is not ready, pls contact the administrator",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "bad qrcode id",
+            "message": "bad qrcode id",
+            "translation": "bad qrcode id",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "this order hasn't got any payment service response",
+            "message": "this order hasn't got any payment service response",
+            "translation": "this order hasn't got any payment service response",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "at least one auth mechanism required",
+            "message": "at least one auth mechanism required",
+            "translation": "at least one auth mechanism required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "pls reset your password",
+            "message": "pls reset your password",
+            "translation": "pls reset your password",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "rate limited",
+            "message": "rate limited",
+            "translation": "rate limited",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "unrecognized verify action",
+            "message": "unrecognized verify action",
+            "translation": "unrecognized verify action",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "password invalid",
+            "message": "password invalid",
+            "translation": "password invalid",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "new password should not be the same as original",
+            "message": "new password should not be the same as original",
+            "translation": "new password should not be the same as original",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "captcha invalid",
+            "message": "captcha invalid",
+            "translation": "captcha invalid",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "captcha failed",
+            "message": "captcha failed",
+            "translation": "captcha failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "user login required",
+            "message": "user login required",
+            "translation": "user login required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "unrecognized token, user relogin required",
+            "message": "unrecognized token, user relogin required",
+            "translation": "unrecognized token, user relogin required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "uncomplete token, user relogin required",
+            "message": "uncomplete token, user relogin required",
+            "translation": "uncomplete token, user relogin required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "user not exists, user relogin required",
+            "message": "user not exists, user relogin required",
+            "translation": "user not exists, user relogin required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "session maybe expired, user relogin required",
+            "message": "session maybe expired, user relogin required",
+            "translation": "session maybe expired, user relogin required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+language: go
+
+go:
+  - 1.10.x
+
+go_import_path: github.com/bbklab/adbot
+
+services: docker
+
+env:
+  - ENV_TRAVISCI=true 
+
+install:
+  - docker run -d --name=etcd --network=host quay.io/coreos/etcd:v3.3
+
+script:
+  - make local-cluster
+  - docker-compose logs --tail 100 master
+  - sleep 3
+  - make run-integration-test

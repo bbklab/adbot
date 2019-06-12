@@ -1,0 +1,73 @@
+# Golang CircleCI 2.0 configuration file
+#
+# See:
+#   - https://circleci.com/docs/2.0/language-go/
+#   - https://circleci.com/docs/2.0/building-docker-images
+#   - https://circleci.com/docs/2.0/circleci-images/
+#
+# Example:
+#   - https://github.com/CircleCI-Public/circleci-demo-docker/blob/master/.circleci/config.yml
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.10
+
+    #### TEMPLATE_NOTE: go expects specific checkout path representing url
+    #### expecting it in the form of
+    ####   /go/src/github.com/circleci/go-tool
+    ####   /go/src/bitbucket.org/circleci/go-tool
+    working_directory: /go/src/github.com/bbklab/adbot
+
+    environment:
+      ENV_CIRCLECI: true
+
+    steps:
+      - checkout
+
+      # create a remote docker environment like followings:
+      # See:
+      #   https://circleci.com/docs/2.0/building-docker-images/
+      #
+      # Remote Docker engine created. Using VM 'default-5829ca32-eb88-411f-a45c-4415ae4f8eda'
+      # Created container accessible with:
+      #   DOCKER_TLS_VERIFY=1
+      #   DOCKER_HOST=tcp://35.231.6.54:2376
+      #   DOCKER_CERT_PATH=/tmp/docker-certs225825164
+      #   DOCKER_MACHINE_NAME=15010894
+      #
+      # Note: The job and remote docker run in separate environments.
+      - setup_remote_docker:
+          version: 17.05.0-ce
+      - run: docker info
+      - run: docker-compose version
+
+
+      # build full production
+      #  - code linters
+      #  - build binary
+      #  - build rpm
+      #  - build image
+      #
+      - run: make product
+
+      # setup optional envs & launch local cluster
+      #
+      # it is not possible to mount a folder from your job space into a container in Remote Docker
+      # so we have to setup license & public key envs, refer the envs in `docker-compose.circleci.yml`
+      # before containers start
+      #
+      # See:
+      #   -https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
+      #
+      - run: make image
+      - run: make local-circleci-cluster
+      - run: sleep 3
+      - run: make local-circleci-cluster-logs # mainly for debug startup failure
+
+      # run integration test cases
+      #
+      - run: make run-circleci-integration-test
+      - run: make rm-local-circleci-cluster || true

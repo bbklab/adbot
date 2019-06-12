@@ -1,0 +1,18 @@
+[Unit]
+Description=Adbot Agent Service
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/adbot/agent.env
+User=root
+ExecStartPre=/bin/sleep 1s
+ExecStart=/usr/bin/adbot-agent join
+Restart=always
+RestartSec=3s
+
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

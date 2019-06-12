@@ -1,0 +1,54 @@
+version: "3"
+
+# note:
+# circleci only provide remote docker environment
+# thus all local volumes are unavaliable
+#
+# See:
+# https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
+#
+services:
+  mongodb:
+    image: "mongo:3.6.11"
+    network_mode: "host"
+    restart: "always"
+    command: "--storageEngine wiredTiger --bind_ip 127.0.0.1 --port 27017"
+    labels:
+      - "role=mongodb"
+
+  prometheus:
+    image: "prom/prometheus:master"
+    network_mode: "host"
+    restart: "always"
+    labels:
+      - "role=prometheus"
+
+  master:
+    image: "bbklab/adbot-master:latest"
+    network_mode: "host"
+    restart: "always"
+    labels:
+      - "role=master"
+    environment:
+      - IN_CONTAINER=yes
+      - IN_DEVELOPING=true
+      - LISTEN_ADDR=0.0.0.0:8008
+      - ADVERTISE_ADDR=127.0.0.1:8008
+      - PROMETHEUS_ADDR=http://127.0.0.1:9090
+      - DB_TYPE=mongodb
+      - MGO_URL=mongodb://127.0.0.1:27017/adbot
+    depends_on:
+      - mongodb
+      - prometheus
+
+  agent:
+    image: "bbklab/adbot-agent:latest"
+    network_mode: "host"
+    restart: "always"
+    labels:
+      - "role=agent"
+    environment:
+      - IN_CONTAINER=yes
+      - JOIN_ADDRS=127.0.0.1:8008
+    depends_on:
+      - master

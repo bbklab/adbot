@@ -1,0 +1,11 @@
+# bbklab/adbot docker image product release 
+FROM bbklab/busybox-cacert
+MAINTAINER Guangzheng Zhang <zhang.elinks@gmail.com>
+WORKDIR /adbot
+ENV PATH=$PATH:/adbot/bin
+# prevent error complains: x509: failed to load system roots and no roots provided
+# note: no need, as the base FROM image have installed the latest ca certificates
+# RUN opkg-install ca-certificates
+RUN mkdir -p /adbot/bin
+COPY bin/adbot /adbot/bin/
+ENTRYPOINT ["bin/adbot", "join"]

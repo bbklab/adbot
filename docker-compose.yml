@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  master:
+    image: "bbklab/adbot-master:latest"
+    network_mode: "host"
+    restart: "always"
+    labels:
+      - "role=master"
+    environment:
+      - IN_CONTAINER=yes
+      - IN_DEVELOPING=true
+      - LISTEN_ADDR=0.0.0.0:8008
+      - PROMETHEUS_ADDR=http://127.0.0.1:9090
+      - TLS_CERT_FILE=/etc/adbot/ssl/cert.pem
+      - TLS_KEY_FILE=/etc/adbot/ssl/key.pem
+      - ADVERTISE_ADDR=127.0.0.1:8008
+      - DB_TYPE=mongodb
+      - MGO_URL=mongodb://127.0.0.1:27017/adbot
+    volumes:
+      - /var/run/adbot:/var/run/adbot:rw                                   # unix sock
+      - /var/log/adbot-audit:/var/log/adbot-audit:rw                       # audit log
+      - ./contrib/tools/ssl-cert.pem:/etc/adbot/ssl/cert.pem:ro            # tls cert, for https serving
+      - ./contrib/tools/ssl-key.pem:/etc/adbot/ssl/key.pem:ro              # tls key, for https serving
+      - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro                # time zone
+
+  agent:
+    image: "bbklab/adbot-agent:latest"
+    network_mode: "host"
+    restart: "always"
+    labels:
+      - "role=agent"
+    environment:
+      - IN_CONTAINER=yes
+      - JOIN_ADDRS=127.0.0.1:8008
+    depends_on:
+      - master
+    volumes:
+      - /usr/share/zoneinfo/Asia/Shanghai:/etc/localtime:ro

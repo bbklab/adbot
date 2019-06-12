@@ -1,0 +1,19 @@
+[Unit]
+Description=Adbot Master Service
+After=network.target
+
+[Service]
+User=root
+EnvironmentFile=-/etc/adbot/master.env
+ExecStartPre=/bin/mkdir -p /var/run/adbot/
+ExecStartPre=/bin/sleep 1s
+ExecStart=/usr/bin/adbot serve
+Restart=always
+RestartSec=10s
+
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

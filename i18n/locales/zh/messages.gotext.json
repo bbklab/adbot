@@ -1,0 +1,185 @@
+{
+    "language": "zh",
+    "messages": [
+        {
+            "id": "unknown error",
+            "message": "unknown error",
+            "translation": "未知错误"
+        },
+        {
+            "id": "there already has one super admin user",
+            "message": "there already has one super admin user",
+            "translation": "已创建管理员"
+        },
+        {
+            "id": "param required",
+            "message": "param required",
+            "translation": "参数必须"
+        },
+        {
+            "id": "can't kick current session",
+            "message": "can't kick current session",
+            "translation": "无法踢除当前会话"
+        },
+        {
+            "id": "not this user session",
+            "message": "not this user session",
+            "translation": "非当前管理员会话"
+        },
+        {
+            "id": "the system is not ready for registering new ss user, pls contact the administrator",
+            "message": "the system is not ready for registering new ss user, pls contact the administrator",
+            "translation": "系统未就绪，无法注册新用户，请联系管理员"
+        },
+        {
+            "id": "no such email",
+            "message": "no such email",
+            "translation": "邮箱未注册"
+        },
+        {
+            "id": "verify code required",
+            "message": "verify code required",
+            "translation": "请输入验证码"
+        },
+        {
+            "id": "verify code expired",
+            "message": "verify code expired",
+            "translation": "验证码已过期"
+        },
+        {
+            "id": "verify code mismatched",
+            "message": "verify code mismatched",
+            "translation": "验证码错误"
+        },
+        {
+            "id": "ssuser login required",
+            "message": "ssuser login required",
+            "translation": "请先登录"
+        },
+        {
+            "id": "ssuser re-login required",
+            "message": "ssuser re-login required",
+            "translation": "请重新登录"
+        },
+        {
+            "id": "ssuser session expired",
+            "message": "ssuser session expired",
+            "translation": "会话过期，请重新登录"
+        },
+        {
+            "id": "parameter plan \u0026 months required",
+            "message": "parameter plan \u0026 months required",
+            "translation": "请指定套餐和月数"
+        },
+        {
+            "id": "parameter months must be positive",
+            "message": "parameter months must be positive",
+            "translation": "月数必须为正整数"
+        },
+        {
+            "id": "authentication failed",
+            "message": "authentication failed",
+            "translation": "账号或密码错误"
+        },
+        {
+            "id": "not a valid email address",
+            "message": "not a valid email address",
+            "translation": "邮箱地址不合规范"
+        },
+        {
+            "id": "the email already occupied",
+            "message": "the email already occupied",
+            "translation": "邮箱已注册"
+        },
+        {
+            "id": "no such email address registered",
+            "message": "no such email address registered",
+            "translation": "邮箱未注册"
+        },
+        {
+            "id": "can't renewall trial plan",
+            "message": "can't renewall trial plan",
+            "translation": "试用套餐无法续费"
+        },
+        {
+            "id": "the system primary payment service is not ready, pls contact the administrator",
+            "message": "the system primary payment service is not ready, pls contact the administrator",
+            "translation": "支付系统未就绪，暂时无法续费，请联系管理员"
+        },
+        {
+            "id": "bad qrcode id",
+            "message": "bad qrcode id",
+            "translation": "错误的二维码ID"
+        },
+        {
+            "id": "this order hasn't got any payment service response",
+            "message": "this order hasn't got any payment service response",
+            "translation": "此订单状态尚未更新"
+        },
+        {
+            "id": "at least one auth mechanism required",
+            "message": "at least one auth mechanism required",
+            "translation": "请提供密码或验证码"
+        },
+        {
+            "id": "pls reset your password",
+            "message": "pls reset your password",
+            "translation": "请重置登录密码"
+        },
+        {
+            "id": "rate limited",
+            "message": "rate limited",
+            "translation": "操作过于频繁，请稍后重试"
+        },
+        {
+            "id": "unrecognized verify action",
+            "message": "unrecognized verify action",
+            "translation": "未识别的验证操作"
+        },
+        {
+            "id": "password invalid",
+            "message": "password invalid",
+            "translation": "密码不合规范"
+        },
+        {
+            "id": "new password should not be the same as original",
+            "message": "new password should not be the same as original",
+            "translation": "新密码不能和旧密码相同"
+        },
+        {
+            "id": "captcha invalid",
+            "message": "captcha invalid",
+            "translation": "验证码不合规范"
+        },
+        {
+            "id": "captcha failed",
+            "message": "captcha failed",
+            "translation": "验证码未通过"
+        },
+        {
+            "id": "user login required",
+            "message": "user login required",
+            "translation": "请管理员登录"
+        },
+        {
+            "id": "unrecognized token, user relogin required",
+            "message": "unrecognized token, user relogin required",
+            "translation": "Token无效, 请管理员重新登录"
+        },
+        {
+            "id": "uncomplete token, user relogin required",
+            "message": "uncomplete token, user relogin required",
+            "translation": "Token不完整, 请管理员重新登录"
+        },
+        {
+            "id": "user not exists, user relogin required",
+            "message": "user not exists, user relogin required",
+            "translation": "管理员不存在,请管理员重新登录"
+        },
+        {
+            "id": "session maybe expired, user relogin required",
+            "message": "session maybe expired, user relogin required",
+            "translation": "Token过期, 请管理员重新登录"
+        }
+    ]
+}

@@ -1,0 +1,52 @@
+[
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/a/1",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/a/1",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/b/2",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/c/3",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/d/4",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/e/5",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/f/6",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/g/7",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/h/8",
+		"max_wait": 10
+	},
+	{
+		"url": "http://bbklab.me:81/tmp/axel",
+		"save_path": "/tmp/i/9",
+		"max_wait": 10
+	}
+]
