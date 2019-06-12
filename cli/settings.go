@@ -30,10 +30,6 @@ var (
 			Usage: "enable httpmux debug or not",
 		},
 		cli.StringFlag{
-			Name:  "metrics-auth",
-			Usage: "metrics basic authentication, format: {user}:{password}, eg: adbot:password",
-		},
-		cli.StringFlag{
 			Name:  "unmask-sensitive",
 			Usage: "unconver the masked sensitive fields (******) for all of api responses",
 		},
@@ -152,13 +148,6 @@ func updateSettings(c *cli.Context) error {
 	if v := c.String("enable-httpmux-debug"); v != "" {
 		vv, _ := strconv.ParseBool(v)
 		req.EnableHTTPMuxDebug = ptype.Bool(vv)
-	}
-	if v := c.String("metrics-auth"); v != "" {
-		auths := strings.SplitN(v, ":", 2)
-		if len(auths) != 2 {
-			return fmt.Errorf("metrics-auth %q not recognized", v)
-		}
-		req.MetricsAuthUser, req.MetricsAuthPassword = ptype.String(auths[0]), ptype.String(auths[1])
 	}
 	if v := c.String("unmask-sensitive"); v != "" {
 		vv, _ := strconv.ParseBool(v)

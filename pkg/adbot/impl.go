@@ -39,6 +39,42 @@ func (a *Adb) ListAdbDevices() ([]string, error) {
 	return a.h.ListDeviceSerials()
 }
 
+// WatchAdbEvents implement AdbHandler
+func (a *Adb) WatchAdbEvents() (<-chan *AdbEvent, chan struct{}) {
+	ch := make(chan *AdbEvent, 1024)
+	stopch := make(chan struct{})
+
+	go func() {
+		w := a.h.NewDeviceWatcher()
+		defer w.Shutdown()
+
+		for ev := range w.C() {
+			var (
+				serial = ev.Serial
+				event  string
+			)
+
+			switch {
+			case ev.CameOnline():
+				event = AdbEventAlive
+			case ev.WentOffline():
+				event = AdbEventDie
+			default:
+				event = fmt.Sprintf("%s->%s", ev.OldState, ev.NewState)
+			}
+
+			select {
+			case ch <- &AdbEvent{Serial: serial, Event: event}:
+			case <-stopch:
+				return
+			default:
+			}
+		}
+	}()
+
+	return ch, stopch
+}
+
 // NewDevice implement AdbHandler
 func (a *Adb) NewDevice(serial string) AdbDeviceHandler {
 	return &AdbDevice{

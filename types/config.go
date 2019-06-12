@@ -20,7 +20,6 @@ type MasterConfig struct {
 	TLSKey        string       `json:"tls_key,omitempty"`  // optional, if given, serving additional https protocol
 	AdvertiseAddr string       `json:"advertise_addr"`     // must
 	PublicKeyData string       `json:"public_key_data"`    // must, file or text
-	PromAddr      string       `json:"prometheus_addr"`    // must
 	UnixSock      string       `json:"unix_sock"`          // optional
 	PidFile       string       `json:"pid_file"`           // optional
 	Store         *StoreConfig `json:"store"`              // must
@@ -71,10 +70,6 @@ func (c *MasterConfig) Valid() error {
 		if _, err := utils.LoadRSAPublicKey(c.PublicKeyData); err != nil {
 			return fmt.Errorf("try load public key [%s] error: %v", c.PublicKeyData, err)
 		}
-	}
-
-	if err := validator.String(c.PromAddr, 1, 1024, nil); err != nil {
-		return fmt.Errorf("prometheus addr %v", err)
 	}
 
 	if c.Store == nil {

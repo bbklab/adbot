@@ -284,7 +284,7 @@ func checkOneAdbDeviceLimit(dvc *types.AdbDevice) bool {
 // CountAdbDeviceThisDayOrders count adb device today's order & fee
 func CountAdbDeviceThisDayOrders(dvcID string) (int, int) {
 	var (
-		start, end = thisDay()
+		start, end = utils.Today()
 		query      = bson.M{
 			"device_id": dvcID,
 			"status":    types.AdbOrderStatusPaid,

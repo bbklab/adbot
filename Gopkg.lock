@@ -41,14 +41,6 @@
   revision = "b0106a3cd6577560b470b8c1b74adb0fb63accc3"
 
 [[projects]]
-  branch = "master"
-  digest = "1:707ebe952a8b3d00b343c01536c79c73771d100f63ec6babeaed5c79e2b8a8dd"
-  name = "github.com/beorn7/perks"
-  packages = ["quantile"]
-  pruneopts = "NUT"
-  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
-
-[[projects]]
   digest = "1:06acaf3ae1057dbeca15a2a9c2ec0d2edc26d39c41ecf457ea55e559e34dce9b"
   name = "github.com/cloudfoundry/gosigar"
   packages = [
@@ -103,14 +95,6 @@
   pruneopts = "NUT"
   revision = "9860bdfd3a171ceafb6e1eafa163482a6ef92643"
   version = "v4.6.4"
-
-[[projects]]
-  digest = "1:15042ad3498153684d09f393bbaec6b216c8eec6d61f63dff711de7d64ed8861"
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  pruneopts = "NUT"
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -184,14 +168,6 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
-  name = "github.com/matttproud/golang_protobuf_extensions"
-  packages = ["pbutil"]
-  pruneopts = "NUT"
-  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
-  version = "v1.0.1"
-
-[[projects]]
   digest = "1:24b5f8d41224b90e3f4d22768926ed782a8ca481d945c0e064c8f165bf768280"
   name = "github.com/miekg/dns"
   packages = ["."]
@@ -233,53 +209,6 @@
   pruneopts = "NUT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
-
-[[projects]]
-  digest = "1:d0af02b9f45c01e55309f12acffe3665f8e274d62075461532b7cf4e8ecbcb4e"
-  name = "github.com/prometheus/client_golang"
-  packages = [
-    "api",
-    "api/prometheus/v1",
-    "prometheus",
-    "prometheus/internal",
-    "prometheus/promhttp",
-  ]
-  pruneopts = "NUT"
-  revision = "abad2d1bd44235a26707c172eab6bca5bf2dbad3"
-  version = "v0.9.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:2d5cd61daa5565187e1d96bae64dbbc6080dacf741448e9629c64fd93203b0d4"
-  name = "github.com/prometheus/client_model"
-  packages = ["go"]
-  pruneopts = "NUT"
-  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
-
-[[projects]]
-  branch = "master"
-  digest = "1:fad5a35eea6a1a33d6c8f949fbc146f24275ca809ece854248187683f52cc30b"
-  name = "github.com/prometheus/common"
-  packages = [
-    "expfmt",
-    "internal/bitbucket.org/ww/goautoneg",
-    "model",
-  ]
-  pruneopts = "NUT"
-  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
-
-[[projects]]
-  branch = "master"
-  digest = "1:6621142cd60b7150ab66f38ff36303ca55843dc5a635c1f9a28f95ecddab72b4"
-  name = "github.com/prometheus/procfs"
-  packages = [
-    ".",
-    "internal/util",
-    "nfs",
-    "xfs",
-  ]
-  pruneopts = "NUT"
-  revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
 
 [[projects]]
   digest = "1:53c3320ee307f01fd24a88e396a8d2239cd8346d1a085320209319f2d33f59cc"
@@ -461,11 +390,6 @@
     "github.com/miekg/dns",
     "github.com/oschwald/geoip2-golang",
     "github.com/oschwald/maxminddb-golang",
-    "github.com/prometheus/client_golang/api",
-    "github.com/prometheus/client_golang/api/prometheus/v1",
-    "github.com/prometheus/client_golang/prometheus",
-    "github.com/prometheus/client_golang/prometheus/promhttp",
-    "github.com/prometheus/common/model",
     "github.com/robfig/cron",
     "github.com/skip2/go-qrcode",
     "github.com/urfave/cli",

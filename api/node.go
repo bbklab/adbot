@@ -59,7 +59,10 @@ func (s *Server) listNodes(ctx *httpmux.Context) {
 		return
 	}
 
-	wraps := s.wrapMultiNodes(nodes)
+	wraps := make([]*types.NodeWrapper, len(nodes))
+	for idx, node := range nodes {
+		wraps[idx] = s.wrapNode(node)
+	}
 
 	ctx.Res.Header().Set("Total-Records", strconv.Itoa(len(wraps)))
 	ctx.JSON(200, wraps)
@@ -247,27 +250,6 @@ func (s *Server) closeNode(ctx *httpmux.Context) {
 	ctx.Status(204)
 }
 
-func (s *Server) setNodeHostname(ctx *httpmux.Context) {
-	var (
-		id       = ctx.Path["node_id"]
-		hostname = ctx.Query["hostname"]
-		node     = scheduler.Node(id)
-	)
-
-	if node == nil {
-		ctx.NotFound(fmt.Sprintf(scheduler.ErrMsgNoSuchNodeOnline, id))
-		return
-	}
-
-	err := scheduler.SetNodeHostname(id, hostname)
-	if err != nil {
-		ctx.AutoError(err)
-		return
-	}
-
-	ctx.Text(200, hostname)
-}
-
 //
 // utils
 //
@@ -277,19 +259,8 @@ func (s *Server) wrapNode(node *types.Node) *types.NodeWrapper {
 		node.Hidden()
 	}
 	return &types.NodeWrapper{
-		Node: node,
+		Node:     node,
+		RemoteIP: node.RemoteIP(),
+		HwInfo:   node.HardwareInfo(),
 	}
-}
-
-func (s *Server) wrapMultiNodes(nodes []*types.Node) []*types.NodeWrapper {
-	ret := make([]*types.NodeWrapper, len(nodes))
-	for idx, node := range nodes {
-		if !unmaskSensitive {
-			node.Hidden()
-		}
-		ret[idx] = &types.NodeWrapper{
-			Node: node,
-		}
-	}
-	return ret
 }

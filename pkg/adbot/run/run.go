@@ -1,0 +1,331 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/bbklab/adbot/pkg/adbot"
+)
+
+var (
+	dvcs []adbot.AdbDeviceHandler
+)
+
+func main() {
+
+	if !true { // skip this test
+		testFull()
+	}
+
+	adb, err := adbot.NewAdb()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	id := "546052d21f384" // test only one target device
+	dvc := adb.NewDevice(id)
+	if !dvc.Online() {
+		log.Fatalln("device not online", id)
+	}
+
+	// make device ready
+	//  - awaken screen each time or
+	//  - modify the system settings to light on the screen always
+	dvc.AwakenScreen()
+	dvc.SwipeUpUnlock()
+	dvc.GotoHome()
+
+	// watch the system notifies
+	notifych, notifystopch := dvc.WatchSysNotifies()
+	defer close(notifystopch)
+
+	ticker := time.NewTicker(time.Second * 30)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case notify := <-notifych:
+			if notify.Source == "com.eg.android.AlipayGphone" {
+				fmt.Println(":::::", notify)
+				fullSearchCurrentDeviceOrders(dvc, id)
+			}
+		case <-ticker.C:
+			fullSearchCurrentDeviceOrders(dvc, id)
+		}
+	}
+
+}
+
+func fullSearchCurrentDeviceOrders(dvc adbot.AdbDeviceHandler, device string) {
+	oids, err := queryRemoteConfirmingOrders(device)
+	if err != nil {
+		log.Warnln("query remote confirming orders error:", err)
+		return
+	}
+
+	fmt.Println("=====", oids)
+	for _, oid := range oids {
+		fmt.Println("***** confirming order", oid)
+		order, err := dvc.AlipaySearchOrder(oid)
+		if err != nil {
+			log.Errorf("AlipaySearchOrder() %s error: %v", oid, err)
+			continue
+		}
+
+		go func(order *adbot.AlipayOrder, oid string) {
+			if err = sendCallback(order); err != nil {
+				log.Errorf("sendCallback() for order %s error: %v", oid, err)
+				return
+			}
+			log.Infof("sendCallback() for order %s succeed!", oid)
+		}(order, oid)
+	}
+}
+
+func testFull() {
+	adb, err := adbot.NewAdb()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ids, err := adb.ListAdbDevices()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, id := range ids {
+		dvc := adb.NewDevice(id)
+		if !dvc.Online() {
+			log.Warnln("device not online", id)
+			continue
+		}
+		dvcs = append(dvcs, dvc)
+	}
+
+	for _, dvc := range dvcs {
+		// device serial
+		serial, _ := dvc.Serial()
+
+		// current top activity
+		activity, _ := dvc.CurrentTopActivity()
+		fmt.Println(activity)
+
+		// list sys notifications
+		/*
+			msgs := dvc.ListSysNotifies()
+			prettyJSON(os.Stdout, msgs)
+		*/
+
+		// collect sysinfo
+		/*
+			info, err := dvc.SysInfo()
+			if err != nil {
+				log.Fatalln(serial, "collect system info error:", err)
+			}
+			prettyJSON(os.Stdout, info)
+		*/
+
+		// awaken and goto home
+		dvc.AwakenScreen()
+		dvc.SwipeUpUnlock()
+		dvc.GotoHome()
+
+		// clear system notify
+		/*
+			err = dvc.ClearSysNotifies()
+			if err != nil {
+				log.Fatalln(serial, "clear system notifies error:", err)
+			}
+			dvc.GotoHome()
+		*/
+
+		// start alipay app
+		err = dvc.StartAliPay()
+		if err != nil {
+			log.Fatalln(serial, "start alipay app error:", err)
+		}
+
+		// search order
+		// dvc.GotoAlipayTabProfile() // no need
+		// dvc.GotoAlipayListOrder() // no need
+		odid := "91a01eada32c"
+		od, err := dvc.AlipaySearchOrder(odid)
+		if err != nil {
+			log.Errorln(serial, "search order id", odid, "error:", err)
+		}
+		prettyJSON(os.Stdout, od)
+		/*
+			 {
+				"comment": "91a01eada32c",
+				"account": "bbk-bbk",
+				"amount": "2.54",
+				"time": "今天 21:32"
+			}
+		*/
+
+		// generate charging qrcode  (deprecated yet, easily to be blocked)
+		/*
+			for i := 1; i <= 10; i++ {
+				dvc.GotoAlipayTabHome()
+				dvc.GotoAlipayCharging()
+				dvc.GotoAlipayChargingAmount()
+				orderID := randomString(16)
+				fee := randomIntRange(1, 100)
+				qrfile := fmt.Sprintf("%s.qr.png", orderID)
+				qrcode, _ := dvc.AlipayGenerateChargingAmountQrCode(orderID, fee)
+				ioutil.WriteFile(qrfile, qrcode.Image, 0644)
+				fmt.Println("=====> qrcode len:", qrfile, len(qrcode.Image))
+			}
+		*/
+
+		// dump current UI
+		// nodes, _ := dvc.DumpCurrentUI()
+		// prettyJSON(os.Stdout, nodes)
+
+		// watch system notify
+		/*
+			go func(dvc AdbDeviceHandler) {
+				notifych, _ := dvc.WatchSysNotifies()
+				// time.AfterFunc(time.Second*180, func() {
+				// fmt.Println(serial, "stopping watch system notification")
+				// close(notifystopch)
+				// })
+				for notify := range notifych {
+					fmt.Println(serial, ":::::", notify)
+				}
+			}(dvc)
+		*/
+		/*
+			::::: &{com.android.mms 张广政北京: 不不饿肯于了一颗童心}
+			::::: &{com.android.mms 张广政北京: 赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞}
+			::::: &{com.android.mms 张广政北京: 默默旅途是不吐嗯英语四六级}
+			::::: &{com.eg.android.AlipayGphone bbk:你丙丁不同空空特特}
+			::::: &{com.eg.android.AlipayGphone bbk:兴蓉投资自己做根据你现在}
+			::::: &{com.eg.android.AlipayGphone bbk:legeduonininlemyhetonioledzhxinmin'你摸过}
+			::::: &{com.eg.android.AlipayGphone bbk:niming}
+			::::: &{com.eg.android.AlipayGphone bbk:还差}
+			::::: &{com.eg.android.AlipayGphone bbk:损人不利己}
+			::::: &{com.android.mms 张广政北京: 的原因在于基本民主政治口红那你空间有两种咯了没有证据农民咯可以咯好}
+			::::: &{com.eg.android.AlipayGphone bbk已成功向你转了1笔钱}
+			::::: &{com.eg.android.AlipayGphone bbk已成功向你转了1笔钱}
+		*/
+
+		// tail -f syslogs
+		/*
+			logch, logstopch := dvc.TailSysLogs()
+			fmt.Println("started tail -f loop")
+			time.AfterFunc(time.Second*60, func() {
+				fmt.Println("stopping tail -f loop")
+				close(logstopch)
+			})
+			fmt.Println("printing tail -f loop")
+			for log := range logch {
+				fmt.Println(":::::", log)
+			}
+		*/
+
+		// tail -f syslogs | grep -E "keyword1|keyword2"
+		/*
+			keywords := []string{"PhoneStatusBar: addNotification", "PhoneStatusBar: updateNotification"}
+			evch, evstopch := dvc.WatchSysEvents(keywords)
+			fmt.Println("started watch status bar notification events")
+			time.AfterFunc(time.Second*120, func() {
+				fmt.Println("stopping watch status bar notification events")
+				close(evstopch)
+			})
+			fmt.Println("printing watch status bar notification events")
+			for ev := range evch {
+				fmt.Println(":::::", ev)
+			}
+		*/
+	}
+
+	select {}
+}
+
+// utils
+//
+
+func queryRemoteConfirmingOrders(device string) ([]string, error) {
+	ids1, err := queryRemoteOrders(device, "confirming")
+	if err != nil {
+		return nil, err
+	}
+	ids2, err := queryRemoteOrders(device, "pending")
+	if err != nil {
+		return nil, err
+	}
+
+	var ret []string
+	ret = append(ret, ids1...)
+	ret = append(ret, ids2...)
+	return ret, nil
+}
+
+func queryRemoteOrders(device, status string) ([]string, error) {
+	var (
+		url = fmt.Sprintf("http://bbklab.me:8080/api/adbpay_orders?device=%s&status=%s&brief=true", device, status)
+	)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("%d - %s", code, string(bs))
+	}
+
+	var ids []string
+	err = json.NewDecoder(resp.Body).Decode(&ids)
+	return ids, err
+}
+
+func sendCallback(order *adbot.AlipayOrder) error {
+	var (
+		orderID = order.Comment
+		aliUser = order.Account
+		amount  = order.Amount
+		time    = order.Time
+		url     = fmt.Sprintf("http://bbklab.me:8080/api/adbpay_hook?out_trade_no=%s&return_code=1&feeyuan=%s&aliuser=%s&time=%s", orderID, amount, aliUser, time)
+	)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err // TODO failure retry
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("%d - %s", code, string(bs))
+	}
+
+	return nil
+}
+
+func prettyJSON(w io.Writer, data interface{}) error {
+	if w == nil {
+		w = io.Writer(os.Stdout)
+	}
+
+	bs, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		return err
+	}
+	w.Write(append(bs, '\r', '\n'))
+	return nil
+}
+
+// func randomIntRange(min, max int) int {
+// return mrand.Intn(max-min) + min
+// }

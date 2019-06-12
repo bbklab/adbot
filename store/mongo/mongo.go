@@ -11,8 +11,7 @@ import (
 var (
 	cUser        = "user"
 	cUserSession = "user_session"
-	cNode        = "node" // node
-	cBlockedNode = "blocked_node"
+	cNode        = "node"       // node
 	cAdbDevice   = "adb_device" // adb device
 	cAdbOrder    = "adb_order"  // adb order
 	cSettings    = "settings"
@@ -256,15 +255,6 @@ var indexes = map[string][]mgo.Index{
 			Key: []string{"join_at"},
 		},
 	},
-	cBlockedNode: {
-		{
-			Key:    []string{"id"},
-			Unique: true,
-		},
-		{
-			Key: []string{"join_at"},
-		},
-	},
 	cAdbDevice: {
 		{
 			Key:    []string{"id"},
@@ -275,10 +265,6 @@ var indexes = map[string][]mgo.Index{
 		},
 		{
 			Key: []string{"status"},
-		},
-		{
-			Key:    []string{"alipay.user_id"}, // alipay user id must be uniq
-			Unique: true,
 		},
 	},
 	cAdbOrder: {

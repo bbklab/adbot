@@ -171,7 +171,6 @@ func (agent *Agent) serveAPI(l net.Listener) error {
 	log.Println("agent api in serving ...")
 
 	mux := httpmux.New(APIPREFIX)
-	mux.SetNotFound(agent.dockerProxy) // fallback: proxy to local docker socket
 	agent.setupRoutes(mux)
 
 	httpd := &http.Server{

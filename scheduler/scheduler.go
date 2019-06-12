@@ -29,27 +29,19 @@ type Scheduler struct {
 	cron         *cron.Cron        // cron
 	adbcbpub     *pubsub.Publisher // adbpay order callback event publisher
 	limitMgr     *rateLimiterMgr   // event rate limiter
-	promClient   *promClient       // prometheus client
 	pubKeyData   string            // public key file path or text (for verify license data)
 	tgbot        *tgbot            // telegram bot
 	geo          geoip.Handler     // geo data
 	startAt      time.Time         // started at time
 	sync.RWMutex                   // protect leader flag
 	leader       bool              // if elected as leader
-
-	cache *cache // TODO cache mainly for metrics exporting
 }
 
 // Init initilize the package scope scheduler reference,
 // called while master boot up, fatal exit if met any errors
-func Init(m *mole.Master, pubKeyData string, promAddr string) {
+func Init(m *mole.Master, pubKeyData string) {
 	if m == nil {
 		log.Fatalln("nil cluster master")
-	}
-
-	promClient, err := newPromClient(promAddr)
-	if err != nil {
-		log.Fatalln("initialize prometheus client error", err)
 	}
 
 	geoReader, err := geoip.NewGeo(resGeoCity, resGeoAsn)
@@ -67,14 +59,11 @@ func Init(m *mole.Master, pubKeyData string, promAddr string) {
 		cron:        cron.New(),
 		adbcbpub:    pubsub.NewPublisher(time.Second*5, 1024),
 		limitMgr:    newRateLimiter(),
-		promClient:  promClient,
 		pubKeyData:  pubKeyData,
 		tgbot:       newRuntimeTGBot(),
 		geo:         geoReader,
 		leader:      false,
 		startAt:     time.Now(),
-
-		cache: newCache(), // TODO
 	}
 
 	// start cron daemon

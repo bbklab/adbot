@@ -23,6 +23,23 @@ func main() {
 	}
 	log.Println(version)
 
+	// watch adb events
+	go func() {
+		w := adb.NewDeviceWatcher()
+		for adbev := range w.C() {
+			alive := adbev.CameOnline()
+			die := adbev.WentOffline()
+			if alive {
+				fmt.Println(adbev.Serial, "ALIVE")
+				continue
+			}
+			if die {
+				fmt.Println(adbev.Serial, "DIE")
+				continue
+			}
+		}
+	}()
+
 	// adb devices -l
 	devices, err := adb.ListDevices()
 	if err != nil {

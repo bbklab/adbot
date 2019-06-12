@@ -94,8 +94,6 @@ func main() {
 		icli.InfoCommand(),
 		icli.UserCommand(),
 		icli.NodeCommand(),
-		icli.WhoIsLeaderCommand(),
-		icli.MetricsCommand(),
 		icli.SettingsCommand(),
 		icli.GeoCommand(),
 		icli.AdbNodeCommand(),

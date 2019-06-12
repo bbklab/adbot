@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 
 	"github.com/gorilla/websocket"
@@ -175,27 +174,6 @@ func (c *AdbotClient) RemoveNodeLabels(id string, all bool, keys []string) (labe
 	return ret, err
 }
 
-// SetNodeZone implement Client interface
-func (c *AdbotClient) SetNodeZone(id, attrZone string) error {
-	lbs := label.New(map[string]string{types.NodeLabelKeyZone: attrZone})
-	_, err := c.UpsertNodeLabels(id, lbs)
-	return err
-}
-
-// SetNodeType implement Client interface
-func (c *AdbotClient) SetNodeType(id, attrType string) error {
-	lbs := label.New(map[string]string{types.NodeLabelKeyType: attrType})
-	_, err := c.UpsertNodeLabels(id, lbs)
-	return err
-}
-
-// SetNodeProtectFlag implement Client interface
-func (c *AdbotClient) SetNodeProtectFlag(id string, flag bool) error {
-	lbs := label.New(map[string]string{types.NodeLabelKeyProtected: fmt.Sprintf("%t", flag)})
-	_, err := c.UpsertNodeLabels(id, lbs)
-	return err
-}
-
 // CloseNode implement Client interface
 func (c *AdbotClient) CloseNode(id string) error {
 	resp, err := c.sendRequest("DELETE", "/api/nodes/"+id+"/close", nil, 0, "", "")
@@ -210,26 +188,4 @@ func (c *AdbotClient) CloseNode(id string) error {
 	}
 
 	return nil
-}
-
-// SetNodeHostname implement Client interface
-func (c *AdbotClient) SetNodeHostname(id, hostname string) error {
-	resp, err := c.sendRequest("PUT", fmt.Sprintf("/api/nodes/%s/hostname?hostname=%s", id, url.QueryEscape(hostname)), nil, 0, "", "")
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if code := resp.StatusCode; code != 200 {
-		bs, _ := ioutil.ReadAll(resp.Body)
-		return &APIError{code, string(bs)}
-	}
-
-	return nil
-}
-
-// RequestNodeDockerAPI implement Client interface
-func (c *AdbotClient) RequestNodeDockerAPI(id string, req *http.Request) (*http.Response, error) {
-	req.URL.Path = fmt.Sprintf("/api/nodes/%s/docker", id) + req.URL.Path
-	return c.client.Do(req)
 }

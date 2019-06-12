@@ -25,10 +25,11 @@ var (
 	NodeLabelKeyProtected = "_node_protected" // preserved node label: node under protected attribute
 )
 
-// NodeWrapper wrap db node with related cluster name
+// NodeWrapper wrap db node with related
 type NodeWrapper struct {
 	*Node
-	Cluster string `json:"cluster"` // cluster name belongs to
+	RemoteIP string `json:"remote_ip"`
+	HwInfo   string `json:"hwinfo"` // CPU.Processor - Memory.Total - Manufacturer
 }
 
 // nolint
@@ -75,26 +76,6 @@ func (a *Node) Name() string {
 	return fmt.Sprintf("%s[%s]", a.ID, a.RemoteIP())
 }
 
-// AttrZone return current node zone
-func (a *Node) AttrZone() string {
-	return a.Labels.Get(NodeLabelKeyZone)
-}
-
-// AttrType return current node type
-func (a *Node) AttrType() string {
-	return a.Labels.Get(NodeLabelKeyType)
-}
-
-// AttrProtected return current node protected
-func (a *Node) AttrProtected() string {
-	return a.Labels.Get(NodeLabelKeyProtected)
-}
-
-// IsProtected check if a node is under protected
-func (a *Node) IsProtected() bool {
-	return strings.ToLower(a.AttrProtected()) == "true"
-}
-
 // Valid verify the node fields
 func (a *Node) Valid() error {
 	if err := validator.String(a.ID, 1, 32, nil); err != nil {
@@ -115,9 +96,12 @@ func (a *Node) RemoteIP() string {
 	return fields[0]
 }
 
-// IsOnGoing is exported
-func (a *Node) IsOnGoing() (string, bool) {
-	return a.Status, a.Status == NodeStatusDeploying || a.Status == NodeStatusDeleting
+// HardwareInfo is exported
+func (a *Node) HardwareInfo() string {
+	if info := a.SysInfo; info != nil {
+		return fmt.Sprintf("%dC - %0.2fG - %s", info.CPU.Processor, float64(info.Memory.Total)/float64(1024*1024*1024), info.Manufacturer)
+	}
+	return ""
 }
 
 // SysInfo represents system informations collected by node

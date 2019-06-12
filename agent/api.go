@@ -2,9 +2,7 @@ package agent
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -25,39 +23,6 @@ func (agent *Agent) ping(ctx *httpmux.Context) {
 
 func (agent *Agent) version(ctx *httpmux.Context) {
 	ctx.JSON(200, version.Version())
-}
-
-// proxy local docker daemon API @ /var/run/docker.sock
-func (agent *Agent) dockerProxy(ctx *httpmux.Context) {
-	connMaster, _, err := ctx.Res.(http.Hijacker).Hijack()
-	if err != nil {
-		ctx.InternalServerError(err)
-		return
-	}
-	defer connMaster.Close()
-
-	connDocker, err := net.Dial("unix", "/var/run/docker.sock")
-	if err != nil {
-		errmsg := fmt.Sprintf("dial docker unix socket error: %v", err)
-		connMaster.Write([]byte("HTTP/1.0 500 Internal Server Error\r\n\r\n" + errmsg + "\r\n"))
-		return
-	}
-	defer connDocker.Close()
-
-	go func() {
-		ctx.Req.Write(connDocker)
-	}()
-	go func() {
-		io.Copy(connMaster, connMaster) // triggered if connMaster is closed, so we close the connDocker
-		connDocker.Close()              // so the following io.Copy quit
-	}()
-	io.Copy(connMaster, connDocker) // the connDocker may never got EOF, so we have to cares how to close the connDocker
-}
-
-// purge all node local resources
-// called while node rm -p
-func (agent *Agent) purgeAll(ctx *httpmux.Context) {
-	ctx.Status(204)
 }
 
 // collect node sysinfo
@@ -240,26 +205,6 @@ func (agent *Agent) terminalResize(ctx *httpmux.Context) {
 	heightN, _ := strconv.Atoi(height)
 
 	if err := termFDs.resize(id, widthN, heightN); err != nil {
-		ctx.AutoError(err)
-		return
-	}
-
-	ctx.Status(200)
-}
-
-// set os hostname
-func (agent *Agent) setHostname(ctx *httpmux.Context) {
-	var (
-		hostname = ctx.Query["hostname"]
-	)
-
-	if hostname == "" {
-		ctx.BadRequest("hostname shouldn't be empty")
-		return
-	}
-
-	err := extensions.SetHostname(hostname)
-	if err != nil {
 		ctx.AutoError(err)
 		return
 	}

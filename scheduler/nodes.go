@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -110,49 +109,6 @@ func NodeStats(id string) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-// SetNodeHostname set node's actually os hostname
-func SetNodeHostname(id, hostname string) error {
-	nodeReq, _ := http.NewRequest("PUT", fmt.Sprintf("http://%s/api/hostname?hostname=%s", id, url.QueryEscape(hostname)), nil)
-	nodeReq.Header.Set("Expect", "100-continue") // fail fast to skip send the body if remote node didn't approve
-
-	resp, err := ProxyNode(id, nodeReq, 0)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if code := resp.StatusCode; code != 200 {
-		bs, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
-	}
-
-	go RefreshNodeAsync(id) // note: trigger node async refresh once
-	return nil
-}
-
-// EnableNodeBBR enable node's kernel tcp bbr
-// the first returned parameter identify if the node will reboot or not?
-func EnableNodeBBR(id string) (bool, error) {
-	nodeReq, _ := http.NewRequest("PUT", fmt.Sprintf("http://%s/api/tcp_bbr", id), nil)
-	nodeReq.Header.Set("Expect", "100-continue") // fail fast to skip send the body if remote node didn't approve
-
-	resp, err := ProxyNode(id, nodeReq, 0)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	switch code := resp.StatusCode; code {
-	case 200: // done, no need to reboot
-		return false, nil
-	case 410: // done, but will reboot later (first time)
-		return true, nil
-	default: // error
-		bs, _ := ioutil.ReadAll(resp.Body)
-		return false, fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
-	}
-}
-
 // DoNodeExec exec remote node cmd and redirect live stream cmd output
 func DoNodeExec(id string, cmd *types.NodeCmd) (io.ReadCloser, error) {
 	cmdbs, _ := json.Marshal(cmd)
@@ -194,29 +150,6 @@ func DoNodeQueryAdbDevices(id string) (map[string]*adbot.AndroidSysInfo, error) 
 	var dvcsinfo map[string]*adbot.AndroidSysInfo
 	err = json.NewDecoder(resp.Body).Decode(&dvcsinfo)
 	return dvcsinfo, err
-}
-
-//
-// Purge Node Resource
-//
-
-// DoNodePurgeAll call node to purge all of node resources
-// mostly called before node removal
-func DoNodePurgeAll(id string) error {
-	nodeReq, _ := http.NewRequest("DELETE", fmt.Sprintf("http://%s/api/purge", id), nil)
-
-	resp, err := ProxyNode(id, nodeReq, 0)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if code := resp.StatusCode; code != 204 {
-		bs, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("%d - %s", code, string(bs))
-	}
-
-	return nil
 }
 
 //

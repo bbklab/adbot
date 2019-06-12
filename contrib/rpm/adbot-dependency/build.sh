@@ -17,7 +17,6 @@ clean() {
 
 prepare() {
 	test -e share/dependency/mongod.pkg -a -r share/dependency/mongod.pkg
-	test -e share/dependency/prometheus.pkg -a -r share/dependency/prometheus.pkg 
 	mkdir -p $product
 }
 

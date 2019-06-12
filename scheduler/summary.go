@@ -17,19 +17,34 @@ func SummaryInfo() (*types.SummaryInfo, error) {
 		Listens:  make([]string, 0, 0),
 	}
 
-	if isLeader() {
-		info.Role = types.RoleLeader
-	} else {
-		info.Role = types.RoleCandidate
-	}
-
 	nodes, err := store.DB().ListNodes(nil)
 	if err != nil {
 		return nil, err
 	}
-	info.NumNodes = make(map[string]int)
+	info.AdbNodes = types.AdbNodeSummary{}
 	for _, node := range nodes {
-		info.NumNodes[node.Status]++
+		info.AdbNodes.Total++
+		switch node.Status {
+		case types.NodeStatusOnline:
+			info.AdbNodes.Online++
+		case types.NodeStatusOffline:
+			info.AdbNodes.Offline++
+		}
+	}
+
+	devices, err := store.DB().ListAdbDevices(nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	info.AdbDevices = types.AdbDeviceSummary{}
+	for _, device := range devices {
+		info.AdbDevices.Total++
+		switch device.Status {
+		case types.AdbDeviceStatusOnline:
+			info.AdbDevices.Online++
+		case types.AdbDeviceStatusOffline:
+			info.AdbDevices.Offline++
+		}
 	}
 
 	return info, nil

@@ -9,35 +9,35 @@ import (
 var summaryInfoTemplate = ` Version:       {{.Version}}
  Listens:       {{.Listens}}
  Uptime:        {{.Uptime}}
- Role:          {{if eq .Role "leader"}}{{green .Role}}{{else}}{{cyan .Role}}{{end}}
  Store:         {{.StoreTyp}}
- Nodes:         {{range $key, $val := .NumNodes}}{{$key}}:{{$val}} {{end}}
- BlockedNodes:  {{.NumBlockedNodes}}
+ AdbNodes:      online:{{.AdbNodes.Online}} offline:{{.AdbNodes.Offline}}
+ AdbDevices:    online:{{.AdbDevices.Online}} offline:{{.AdbDevices.Offline}} overquota:{{.AdbDevices.OverQuota}}
 `
 
 // SummaryInfo is exported
 type SummaryInfo struct {
-	Version         string   `json:"version"`
-	Listens         []string `json:"listens"`
-	Uptime          string   `json:"uptime"`
-	Role            Role     `json:"role"` // leader, candidate ...
-	StoreTyp        string   `json:"store_type"`
-	NumNodes        NodeInfo `json:"num_nodes"`
-	NumBlockedNodes int      `json:"num_blocked_nodes"`
+	Version    string           `json:"version"`
+	Listens    []string         `json:"listens"`
+	Uptime     string           `json:"uptime"`
+	StoreTyp   string           `json:"store_type"`
+	AdbNodes   AdbNodeSummary   `json:"adb_nodes"`   // status -> num
+	AdbDevices AdbDeviceSummary `json:"adb_devices"` // status -> num
 }
 
-// Role is exported
-type Role string
+// AdbNodeSummary is exported
+type AdbNodeSummary struct {
+	Total   int `json:"total"`
+	Online  int `json:"online"`
+	Offline int `json:"offline"`
+}
 
-var (
-	// RoleLeader is exported
-	RoleLeader = Role("leader")
-	// RoleCandidate is exported
-	RoleCandidate = Role("candidate")
-)
-
-// NodeInfo is exported
-type NodeInfo map[string]int // online|offline -> num
+// AdbDeviceSummary is exported
+type AdbDeviceSummary struct {
+	Total     int `json:"total"`
+	Online    int `json:"online"`
+	Offline   int `json:"offline"`
+	OverQuota int `json:"over_quota"`
+}
 
 // WriteTo is exported
 func (info *SummaryInfo) WriteTo(w io.Writer) (int64, error) {

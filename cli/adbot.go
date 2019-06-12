@@ -92,7 +92,7 @@ var (
 // AdbNodeCommand is exported
 func AdbNodeCommand() cli.Command {
 	return cli.Command{
-		Name:  "adbnode",
+		Name:  "adb-node",
 		Usage: "adb node management",
 		Subcommands: []cli.Command{
 			adbNodeListCommand(),    // ls
@@ -121,7 +121,7 @@ func adbNodeInspectCommand() cli.Command {
 // AdbDeviceCommand is exported
 func AdbDeviceCommand() cli.Command {
 	return cli.Command{
-		Name:  "adbdevice",
+		Name:  "adb-device",
 		Usage: "adb device management",
 		Subcommands: []cli.Command{
 			adbDeviceListCommand(),         // ls

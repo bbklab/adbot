@@ -104,6 +104,39 @@ func (s *Server) getAdbDevice(ctx *httpmux.Context) {
 	ctx.JSON(200, s.wrapAdbDevice(dvc))
 }
 
+func (s *Server) updateAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	var req struct {
+		Desc *string `json:"desc"`
+	}
+	if err := ctx.Bind(&req); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	if req.Desc == nil {
+		ctx.Status(204)
+		return
+	}
+
+	if err := validator.String(*req.Desc, -1, 128, nil); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	err := scheduler.MemoAdbDeviceDesc(dvcid, *req.Desc)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	current, _ := store.DB().GetAdbDevice(dvcid)
+	ctx.JSON(200, current)
+}
+
 func (s *Server) setAdbDeviceBill(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]
@@ -295,7 +328,7 @@ func (s *Server) listAdbOrders(ctx *httpmux.Context) {
 	var (
 		status  = ctx.Query["status"]
 		nid     = ctx.Query["node_id"]
-		device  = ctx.Query["device"]
+		device  = ctx.Query["device_id"]
 		startAt = ctx.Query["start_at"]
 		endAt   = ctx.Query["end_at"]
 		query   = bson.M{}
@@ -309,7 +342,7 @@ func (s *Server) listAdbOrders(ctx *httpmux.Context) {
 		query["node_id"] = nid
 	}
 	if device != "" {
-		query["device"] = device
+		query["device_id"] = device
 	}
 
 	var (
@@ -547,7 +580,7 @@ func (s *Server) wrapAdbNode(node *types.Node) *types.AdbNode {
 	devices, _ := store.DB().ListAdbDevices(nil, bson.M{"node_id": node.ID})
 	onlineN, offlineN := s.countAdbDevicesStatus(devices)
 	return &types.AdbNode{
-		Node:       node,
+		Node:       s.wrapNode(node),
 		NumDevices: int64(len(devices)),
 		NumOnline:  onlineN,
 		NumOffline: offlineN,

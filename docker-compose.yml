@@ -11,7 +11,6 @@ services:
       - IN_CONTAINER=yes
       - IN_DEVELOPING=true
       - LISTEN_ADDR=0.0.0.0:8008
-      - PROMETHEUS_ADDR=http://127.0.0.1:9090
       - TLS_CERT_FILE=/etc/adbot/ssl/cert.pem
       - TLS_KEY_FILE=/etc/adbot/ssl/key.pem
       - ADVERTISE_ADDR=127.0.0.1:8008

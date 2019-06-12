@@ -24,10 +24,10 @@ var (
 
 // AdbNode is a wrapper of db node with ralated adb devices
 type AdbNode struct {
-	Node       *Node `json:"node"`        // db node
-	NumDevices int64 `json:"num_devices"` // nb of total devices
-	NumOnline  int64 `json:"num_online"`  // nb of online devices
-	NumOffline int64 `json:"num_offline"` // nb of offline devices
+	Node       *NodeWrapper `json:"node"`        // db node
+	NumDevices int64        `json:"num_devices"` // nb of total devices
+	NumOnline  int64        `json:"num_online"`  // nb of online devices
+	NumOffline int64        `json:"num_offline"` // nb of offline devices
 }
 
 // AdbDeviceWrapper is exported
@@ -42,6 +42,7 @@ type AdbDevice struct {
 	ID        string                `json:"id" bson:"id"`                 // note: device id
 	NodeID    string                `json:"node_id" bson:"node_id"`       // related node id
 	SysInfo   *adbot.AndroidSysInfo `json:"sysinfo" bson:"sysinfo"`       // device info, update by refresher
+	Desc      string                `json:"desc" bson:"desc"`             // description text
 	Status    string                `json:"status" bson:"status"`         // status: online,offline updated by refresher
 	Errmsg    string                `json:"error" bson:"error"`           // error message, updated by refresher
 	MaxAmount int                   `json:"max_amount" bson:"max_amount"` // max amount per day, 0 means unlimit

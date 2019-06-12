@@ -27,12 +27,11 @@ func NewClient() (client.Client, error) {
 
 	// login to get the token and save
 	if curr.Token == "" {
-		token, err := client.Login(curr.ReqLogin())
-		if err != nil {
-			return nil, err
+		token, _ := client.Login(curr.ReqLogin()) // note: ignore errors
+		if token != "" {
+			client.SetHeader("Admin-Access-Token", token)
+			SetAdbotHostAuth(curr.Name, curr.User, curr.Password, token)
 		}
-		client.SetHeader("Admin-Access-Token", token)
-		SetAdbotHostAuth(curr.Name, curr.User, curr.Password, token)
 		return client, nil
 	}
 

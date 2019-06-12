@@ -70,17 +70,6 @@ var (
 		},
 	}
 
-	batchExecNodeFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "cmd",
-			Usage: "command to be executed on bunch of nodes",
-		},
-		cli.BoolFlag{
-			Name:  "all,a",
-			Usage: "execute command on all of nodes",
-		},
-	}
-
 	watchNodeFlags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "all,a",
@@ -94,29 +83,6 @@ var (
 			Usage: "remove all of node labels",
 		},
 	}
-
-	setNodeAttrFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "hostname",
-			Usage: "set node os hostname",
-		},
-		cli.StringFlag{
-			Name:  "zone",
-			Usage: "set node zone label",
-		},
-		cli.StringFlag{
-			Name:  "type",
-			Usage: "set node type label",
-		},
-		cli.BoolFlag{
-			Name:  "protect",
-			Usage: "set node protect flag label",
-		},
-		cli.BoolFlag{
-			Name:  "unprotect",
-			Usage: "remove node protect flag label",
-		},
-	}
 )
 
 // NodeCommand is exported
@@ -125,16 +91,14 @@ func NodeCommand() cli.Command {
 		Name:  "node",
 		Usage: "node management",
 		Subcommands: []cli.Command{
-			nodeListCommand(),      // ls
-			nodeInspectCommand(),   // inspect
-			nodeStatsCommand(),     // stats
-			nodeTerminalCommand(),  // terminal
-			nodeExecCommand(),      // exec
-			nodeBatchExecCommand(), // batchexec
-			nodeWatchCommand(),     // watch
-			nodeLabelCommand(),     // label
-			nodeCloseCommand(),     // close
-			nodeSetAttrCommand(),   // setattr
+			nodeListCommand(),     // ls
+			nodeInspectCommand(),  // inspect
+			nodeStatsCommand(),    // stats
+			nodeTerminalCommand(), // terminal
+			nodeExecCommand(),     // exec
+			nodeWatchCommand(),    // watch
+			nodeLabelCommand(),    // label
+			nodeCloseCommand(),    // close
 		},
 	}
 }
@@ -186,16 +150,6 @@ func nodeExecCommand() cli.Command {
 	}
 }
 
-func nodeBatchExecCommand() cli.Command {
-	return cli.Command{
-		Name:      "batchexec",
-		Usage:     "exec command bunch of nodes",
-		ArgsUsage: "NODE [NODE...]",
-		Flags:     batchExecNodeFlags,
-		Action:    batchExecNode,
-	}
-}
-
 func nodeWatchCommand() cli.Command {
 	return cli.Command{
 		Name:      "watch",
@@ -240,16 +194,6 @@ func nodeCloseCommand() cli.Command {
 		Usage:     "close a specified node once",
 		ArgsUsage: "NODE",
 		Action:    closeNode,
-	}
-}
-
-func nodeSetAttrCommand() cli.Command {
-	return cli.Command{
-		Name:      "setattr",
-		Usage:     "set attributions for a node",
-		ArgsUsage: "NODE",
-		Flags:     setNodeAttrFlags,
-		Action:    setNodeAttr,
 	}
 }
 
@@ -451,116 +395,6 @@ func execNode(c *cli.Context) error {
 	defer stream.Close()
 
 	io.Copy(os.Stdout, stream)
-	return nil
-}
-
-func batchExecNode(c *cli.Context) error {
-	client, err := helpers.NewClient()
-	if err != nil {
-		return err
-	}
-
-	var (
-		nodeIDs = c.Args()
-		cmd     = c.String("cmd")
-		all     = c.Bool("all")
-	)
-
-	if cmd == "" {
-		return cli.ShowSubcommandHelp(c)
-	}
-
-	// if all, query all current node ids
-	if all || (len(nodeIDs) > 0 && strings.ToLower(nodeIDs[0]) == helpers.ParamAll) {
-		nodes, err := client.ListNodes(nil, nil, "")
-		if err != nil {
-			return err
-		}
-		nodeIDs = make([]string, 0, len(nodes)) // reset empty and refill with all node ids
-		for _, node := range nodes {
-			nodeIDs = append(nodeIDs, node.ID)
-		}
-		if len(nodeIDs) == 0 { // if use -a but empty nodes, directly return
-			return nil
-		}
-	}
-
-	if len(nodeIDs) == 0 { // must provide at least one node id
-		return cli.ShowSubcommandHelp(c)
-	}
-
-	// run cmd on bunch of nodes by concurrency
-	var (
-		wg sync.WaitGroup
-	)
-
-	wg.Add(len(nodeIDs))
-	for _, nodeID := range nodeIDs {
-
-		var (
-			colorf = color.SeqColorFunc() // sequence (non-repeated) color node prefix
-			prefix = colorf(fmt.Sprintf("[%s]  | ", nodeID))
-		)
-
-		go func(nodeID, prefix string) {
-			defer wg.Done()
-
-			var (
-				logf = func(content string) {
-					fmt.Fprintln(os.Stdout, prefix+content)
-				}
-				errf = func(content string) {
-					fmt.Fprintln(os.Stderr, prefix+color.Red(content))
-				}
-			)
-
-			stream, err := client.RunNodeCmd(nodeID, cmd)
-			if err != nil {
-				errf(err.Error())
-				return
-			}
-			helpers.TrapExit(func() { stream.Close() })
-			defer stream.Close()
-
-			// stream copy each line
-			var (
-				reader  = bufio.NewReader(stream)
-				numLine int
-			)
-			for {
-				line, err := reader.ReadBytes('\n')
-				if err != nil {
-					if err == io.EOF {
-						if len(line) > 0 {
-							goto PROCESS
-						}
-						break
-					}
-					errf(err.Error())
-					numLine++
-					return
-				}
-
-			PROCESS:
-				line = bytes.TrimSuffix(line, []byte("\n")) // trim final '\n'
-				if bytes.HasSuffix(line, []byte("\r")) {    // trim possible final '\r'
-					line = bytes.TrimSuffix(line, []byte("\r"))
-				}
-
-				numLine++
-				logf(string(line))
-			}
-
-			// if without any lines output, print an empty line
-			if numLine == 0 {
-				logf("")
-			}
-
-		}(nodeID, prefix)
-
-	}
-	wg.Wait()
-
 	return nil
 }
 
@@ -771,63 +605,6 @@ func closeNode(c *cli.Context) error {
 	}
 
 	if err := client.CloseNode(nodeID); err != nil {
-		return err
-	}
-
-	os.Stdout.Write(append([]byte("OK"), '\r', '\n'))
-	return nil
-}
-
-func setNodeAttr(c *cli.Context) error {
-	client, err := helpers.NewClient()
-	if err != nil {
-		return err
-	}
-
-	var (
-		nodeID = c.Args().First()
-	)
-
-	if nodeID == "" || c.NumFlags() == 0 {
-		return cli.ShowSubcommandHelp(c)
-	}
-
-	var (
-		hostname  = c.String("hostname")
-		zone      = c.String("zone")
-		typ       = c.String("type")
-		protect   = c.Bool("protect")
-		unprotect = c.Bool("unprotect")
-	)
-
-	if hostname != "" {
-		err = client.SetNodeHostname(nodeID, hostname)
-		if err != nil {
-			return err
-		}
-	}
-
-	if zone != "" {
-		err = client.SetNodeZone(nodeID, zone)
-		if err != nil {
-			return err
-		}
-	}
-
-	if typ != "" {
-		err = client.SetNodeType(nodeID, typ)
-		if err != nil {
-			return err
-		}
-	}
-
-	switch {
-	case protect:
-		err = client.SetNodeProtectFlag(nodeID, true)
-	case unprotect:
-		err = client.SetNodeProtectFlag(nodeID, false)
-	}
-	if err != nil {
 		return err
 	}
 

@@ -126,12 +126,6 @@ func MemoSettingsSet(req *types.UpdateSettingsReq) error {
 	if req.EnableHTTPMuxDebug != nil {
 		setUpdator["enable_httpmux_debug"] = *req.EnableHTTPMuxDebug
 	}
-	if req.MetricsAuthUser != nil {
-		setUpdator["metrics_auth_user"] = *req.MetricsAuthUser
-	}
-	if req.MetricsAuthPassword != nil {
-		setUpdator["metrics_auth_password"] = *req.MetricsAuthPassword
-	}
 	if req.UnmarkSensitive != nil {
 		setUpdator["unmask_sensitive"] = *req.UnmarkSensitive
 	}
@@ -166,6 +160,12 @@ func MemoNodeAllAdbDeviceStatus(nid, status, errmsg string) error {
 		MemoAdbDeviceStatus(dvc.ID, status, errmsg)
 	}
 	return nil
+}
+
+// MemoAdbDeviceDesc update db AdbDevice's Desc
+func MemoAdbDeviceDesc(id, desc string) error {
+	setUpdator := bson.M{"desc": desc}
+	return store.DB().UpdateAdbDevice(id, bson.M{"$set": setUpdator})
 }
 
 // MemoAdbDeviceMaxBill update db AdbDevice's MaxBill

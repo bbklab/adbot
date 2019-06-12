@@ -35,10 +35,6 @@ type Client interface {
 	OpenNodeTerminal(id string, input io.Reader, output io.Writer) error
 	WatchNodeEvents(id string) (io.ReadCloser, error)
 	CloseNode(id string) error
-	SetNodeHostname(id, hostname string) error     // set actually node system hostname
-	SetNodeZone(id, attrZone string) error         // set db node preserved label
-	SetNodeType(id, attrTyp string) error          // set db node preserved label
-	SetNodeProtectFlag(id string, flag bool) error // set db node preserved label
 
 	UpsertNodeLabels(id string, lbs label.Labels) (label.Labels, error)
 	RemoveNodeLabels(id string, all bool, keys []string) (label.Labels, error)
@@ -71,8 +67,6 @@ type Client interface {
 	PProfData(name string, seconds int) (io.ReadCloser, error)
 
 	Panic() error
-
-	Metrics() (io.ReadCloser, error)
 
 	Login(req *types.ReqLogin) (string, error) // return the access token
 	Logout() error

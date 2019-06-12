@@ -168,9 +168,6 @@ func (s *Server) applyRuntimeSettings() error {
 
 	unmaskSensitive = current.UnmarkSensitive
 
-	metricsAuthUser = current.MetricsAuthUser
-	metricsAuthPassword = current.MetricsAuthPassword
-
 	scheduler.RenewTGBot(current.TGBotToken)
 
 	return nil

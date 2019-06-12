@@ -21,6 +21,18 @@ func init() {
 	mrand.Seed(time.Now().UnixNano())
 }
 
+// nolint
+var (
+	AdbEventDie   = "die"
+	AdbEventAlive = "alive"
+)
+
+// AdbEvent is an adb device event
+type AdbEvent struct {
+	Serial string `json:"serial"`
+	Event  string `json:"event"` // die, alive
+}
+
 // AndroidSysInfo is exported
 type AndroidSysInfo struct {
 	SerialNo           string              `json:"serial_no"`            // ro.serialno

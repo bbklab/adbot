@@ -3,6 +3,7 @@ package adbot
 // AdbHandler represents the adb host (127.0.0.1:5037) handler
 type AdbHandler interface {
 	ListAdbDevices() ([]string, error)
+	WatchAdbEvents() (<-chan *AdbEvent, chan struct{})
 	NewDevice(serial string) AdbDeviceHandler
 }
 

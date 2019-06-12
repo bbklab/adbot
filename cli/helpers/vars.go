@@ -23,7 +23,6 @@ var (
 var (
 	AdbotServiceName  = "adbot-master" // should be same as the systemd service name of: contrib/rpm/files/systemd/adbot-master.service
 	MongodServiceName = "mongod"
-	PromServiceName   = "prometheus"
 )
 
 // nolint
@@ -31,9 +30,7 @@ var (
 	resBaseDir              = "/usr/share/adbot"
 	resDepDir               = path.Join(resBaseDir, "dependency")
 	ResDepMongod            = path.Join(resDepDir, "mongod.pkg")
-	ResDepPrometheus        = path.Join(resDepDir, "prometheus.pkg")
 	ResDepMongodPackageName = "mongodb-org-server" // rpm package name
-	ResDepPromPackageName   = "prometheus2"        // rpm package name
 )
 
 func init() {

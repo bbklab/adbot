@@ -13,17 +13,12 @@ func (agent *Agent) setupRoutes(mux *httpmux.Mux) {
 	// version
 	mux.GET("/version", agent.version)
 
-	// purge this node resources
-	mux.DELETE("/purge", agent.purgeAll)
-
 	// collect node sysinfo
 	mux.GET("/sysinfo", agent.sysinfo)
 	mux.GET("/stats", agent.stats) // live stream of sysinfo
 
 	// exec node command
 	mux.POST("/exec", agent.runCmd)
-	// set os hostname
-	mux.PUT("/hostname", agent.setHostname)
 
 	// node terminal
 	mux.GET("/terminal", agent.terminal)

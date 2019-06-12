@@ -37,11 +37,6 @@ var (
 			EnvVar: "PUBLIC_KEY_DATA",
 		},
 		cli.StringFlag{
-			Name:   "prometheus-addr",
-			Usage:  "The prometheus serving address",
-			EnvVar: "PROMETHEUS_ADDR",
-		},
-		cli.StringFlag{
 			Name:   "db-type",
 			Usage:  "The database store type, [mongodb]",
 			Value:  "mongodb",
@@ -86,7 +81,6 @@ func runMaster(c *cli.Context) error {
 		TLSKey:        c.String("tls-key"),
 		AdvertiseAddr: c.String("advertise-addr"),
 		PublicKeyData: c.String("public-key-data"),
-		PromAddr:      c.String("prometheus-addr"),
 		UnixSock:      c.String("unix-sock"),
 		PidFile:       c.String("pid-file"),
 		Store: &types.StoreConfig{

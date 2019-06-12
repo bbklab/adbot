@@ -22,9 +22,6 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	// get telegram bot status
 	mux.GET("/tgbot", s.telegramBotStatus)
 
-	// prometheus metrics exporter
-	mux.GET("/metrics", s.exportMetrics)
-
 	// debug
 	mux.GET("/debug/dump", s.debugDump)
 
@@ -55,7 +52,6 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/nodes/:node_id/stats", s.watchNodeStats)
 	mux.POST("/nodes/:node_id/exec", s.runNodeCmd)
 	mux.DELETE("/nodes/:node_id/close", s.closeNode)
-	mux.PUT("/nodes/:node_id/hostname", s.setNodeHostname)
 	// node labels
 	mux.PUT("/nodes/:node_id/labels", s.upsertNodeLabels)
 	mux.DELETE("/nodes/:node_id/labels", s.rmNodeLabels)
@@ -73,6 +69,7 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	// adb devices
 	mux.GET("/adb_devices", s.listAdbDevices)
 	mux.GET("/adb_devices/:device_id", s.getAdbDevice)
+	mux.PATCH("/adb_devices/:device_id", s.updateAdbDevice)
 	mux.PUT("/adb_devices/:device_id/bill", s.setAdbDeviceBill)
 	mux.PUT("/adb_devices/:device_id/amount", s.setAdbDeviceAmount)
 	mux.PUT("/adb_devices/:device_id/weight", s.setAdbDeviceWeight)

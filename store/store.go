@@ -39,12 +39,6 @@ type Store interface {
 	ListNodes(pager types.Pager) ([]*types.Node, error)
 	CountNodes() int
 
-	AddBlockedNode(node *types.Node) error
-	RemoveBlockedNode(id string) error
-	GetBlockedNode(id string) (*types.Node, error)
-	ListBlockedNodes(pager types.Pager) ([]*types.Node, error)
-	CountBlockedNodes() int
-
 	// adb node
 	AddAdbDevice(dvc *types.AdbDevice) error
 	UpdateAdbDevice(id string, update interface{}) error
