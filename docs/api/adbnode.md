@@ -17,7 +17,7 @@ response contains Header: `Total-Records`
   {
     "node": {
       "id": "4a264c130cde9319",
-      "status": "online",       // online, offline
+      "status": "online",       // online, offline, flagging
       "version": "1.0.0-beta",
       "error": "",
       "remote_addr": "115.60.5.118:8652",

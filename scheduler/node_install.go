@@ -61,6 +61,7 @@ func NodeJoinCallBack(id string, firstJoin bool) error {
 		})
 	} else { // exists, db updating newly joined node info
 		setUpdator := bson.M{
+			"status":         types.NodeStatusOnline,
 			"version":        ver,
 			"error":          "",
 			"remote_addr":    remoteAddr,
@@ -69,9 +70,6 @@ func NodeJoinCallBack(id string, firstJoin bool) error {
 			"sysinfo":        info,
 			"join_at":        node.JoinAt(),
 			"last_active_at": node.LastActiveAt(),
-		}
-		if exists.Status != types.NodeStatusDeleting { // deleting node status keep unchange
-			setUpdator["status"] = types.NodeStatusOnline // newly joined node as online
 		}
 		err = store.DB().UpdateNode(id, bson.M{"$set": setUpdator})
 	}

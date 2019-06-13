@@ -45,6 +45,11 @@ func SummaryInfo() (*types.SummaryInfo, error) {
 		case types.AdbDeviceStatusOffline:
 			info.AdbDevices.Offline++
 		}
+		if device.OverQuota {
+			info.AdbDevices.OverQuota++
+		} else {
+			info.AdbDevices.WithinQuota++
+		}
 	}
 
 	return info, nil

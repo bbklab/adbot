@@ -1,4 +1,6 @@
 # Adbot
 
+[![CircleCI](https://circleci.com/gh/bbklab/adbot.svg?style=svg&circle-token=dfbf67a3cf76f95f4cf3121165986b49145d5167)](https://circleci.com/gh/bbklab/adbot)
+
 ## Documents
   - [API](/docs/api/)

@@ -18,10 +18,6 @@ import (
 var (
 	updateSettingsFlags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "advertise-addr",
-			Usage: "set advertise address, multi addresses seperated by comma(,) eg: 192.168.1.100:80,192.168.1.101:88",
-		},
-		cli.StringFlag{
 			Name:  "log-level",
 			Usage: "set log level, eg debug|info|warn|error|fatal",
 		},
@@ -139,9 +135,6 @@ func updateSettings(c *cli.Context) error {
 
 	var req = new(types.UpdateSettingsReq)
 
-	if v := c.String("advertise-addr"); v != "" {
-		req.AdvertiseAddr = ptype.String(utils.StripSpaces(v))
-	}
 	if v := c.String("log-level"); v != "" {
 		req.LogLevel = ptype.String(v)
 	}

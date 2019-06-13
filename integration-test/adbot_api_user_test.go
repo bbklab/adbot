@@ -85,15 +85,17 @@ func (s *ApiSuite) TestUserChgPassword(c *check.C) {
 	err := s.client.ChangeUserPassword(&types.ReqChangePassword{userPass, "xxxx"})
 	c.Assert(err, check.IsNil)
 	// relogin required after change password
-	err = s.client.Login(&types.ReqLogin{userName, types.Password("xxxx")})
+	token, err := s.client.Login(&types.ReqLogin{userName, types.Password("xxxx")})
 	c.Assert(err, check.IsNil)
+	s.client.SetHeader("Admin-Access-Token", token)
 
 	// change back
 	err = s.client.ChangeUserPassword(&types.ReqChangePassword{"xxxx", userPass})
 	c.Assert(err, check.IsNil)
 	// relogin required after change password
-	err = s.client.Login(&types.ReqLogin{userName, types.Password(userPass)})
+	token, err = s.client.Login(&types.ReqLogin{userName, types.Password(userPass)})
 	c.Assert(err, check.IsNil)
+	s.client.SetHeader("Admin-Access-Token", token)
 
 	costPrintln("TestUserChgPassword() passed", startAt)
 }

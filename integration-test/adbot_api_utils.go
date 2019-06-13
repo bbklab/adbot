@@ -14,10 +14,7 @@ func (s *ApiSuite) getAssertOnlineNode(c *check.C) *types.Node {
 
 	var ret *types.Node
 	for _, node := range nodes {
-		if !node.IsProtected() {
-			ret = node.Node
-			break
-		}
+		ret = node.Node
 	}
 	c.Assert(ret, check.NotNil)
 	return ret
@@ -30,9 +27,7 @@ func (s *ApiSuite) getOnlineNodeIDs(c *check.C) []string {
 
 	ids := make([]string, 0, 0)
 	for _, node := range nodes {
-		if !node.IsProtected() {
-			ids = append(ids, node.ID)
-		}
+		ids = append(ids, node.ID)
 	}
 	return ids
 }

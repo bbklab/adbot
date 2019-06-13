@@ -30,3 +30,4 @@
   - [全局设置](/docs/api/setting.md)
     + [查询](/docs/api/setting.md#get)
     + [修改](/docs/api/setting.md#update)
+  - [支付宝UserID二维码](/docs/api/other.md#alipay-userid-qrcode)

@@ -8,7 +8,6 @@ import (
 
 	"github.com/bbklab/adbot/pkg/httpmux"
 	"github.com/bbklab/adbot/pkg/label"
-	"github.com/bbklab/adbot/pkg/qrcode"
 	"github.com/bbklab/adbot/scheduler"
 	"github.com/bbklab/adbot/store"
 	"github.com/bbklab/adbot/types"
@@ -81,29 +80,6 @@ func (s *Server) resetSettings(ctx *httpmux.Context) {
 		current.Hidden()
 	}
 	ctx.JSON(200, current)
-}
-
-func (s *Server) genAdvertiseAddrQrCode(ctx *httpmux.Context) {
-	settings, err := store.DB().GetSettings()
-	if err != nil {
-		ctx.AutoError(err)
-		return
-	}
-
-	if settings.AdvertiseAddr == "" {
-		ctx.InternalServerError("global advertise addr not set yet")
-		return
-	}
-
-	png, err := qrcode.Encode(settings.AdvertiseAddr)
-	if err != nil {
-		ctx.InternalServerError(err)
-		return
-	}
-
-	ctx.Res.Header().Set("Content-Type", "image/png")
-	ctx.Res.WriteHeader(200)
-	ctx.Res.Write(png)
 }
 
 func (s *Server) setGlobalAttrs(ctx *httpmux.Context) {

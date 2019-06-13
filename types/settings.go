@@ -2,15 +2,11 @@ package types
 
 import (
 	"fmt"
-	"net"
-	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/bbklab/adbot/pkg/label"
-	"github.com/bbklab/adbot/pkg/validator"
 )
 
 var (
@@ -23,7 +19,6 @@ var (
 	// GlobalDefaultSettings define the default settings
 	// applied on the first startup or settings reset
 	GlobalDefaultSettings = &Settings{
-		AdvertiseAddr:      "",
 		LogLevel:           "info",
 		EnableHTTPMuxDebug: false,
 		UnmarkSensitive:    false,
@@ -36,7 +31,6 @@ var (
 
 // Settings is a db setting
 type Settings struct {
-	AdvertiseAddr      string       `json:"advertise_addr" bson:"advertise_addr"`             // agent join addrs, multi splited by comma ','
 	LogLevel           string       `json:"log_level" bson:"log_level"`                       // logrus log level
 	EnableHTTPMuxDebug bool         `json:"enable_httpmux_debug" bson:"enable_httpmux_debug"` // enable httpmux debug or not
 	UnmarkSensitive    bool         `json:"unmask_sensitive" bson:"unmask_sensitive"`         // uncover the sensitive fields, eg: ssh password, access key, etc
@@ -55,7 +49,6 @@ func (s *Settings) Hidden() {
 
 // UpdateSettingsReq is similar to types.Settings, but all changable fields are pointer type
 type UpdateSettingsReq struct {
-	AdvertiseAddr      *string `json:"advertise_addr"`
 	LogLevel           *string `json:"log_level"`
 	EnableHTTPMuxDebug *bool   `json:"enable_httpmux_debug"`
 	UnmarkSensitive    *bool   `json:"unmask_sensitive"`
@@ -64,23 +57,6 @@ type UpdateSettingsReq struct {
 
 // Valid verify the UpdateSettingsReq
 func (req *UpdateSettingsReq) Valid() error {
-	if req.AdvertiseAddr != nil {
-		if err := validator.String(*req.AdvertiseAddr, 1, 4096, nil); err != nil {
-			return fmt.Errorf("advertise addr %v", err)
-		}
-	}
-	if req.AdvertiseAddr != nil {
-		for _, addr := range strings.Split(*req.AdvertiseAddr, ",") {
-			_, port, err := net.SplitHostPort(addr)
-			if err != nil {
-				return fmt.Errorf("advertise addr %s should be the format host:port", addr)
-			}
-			// ensure port must be numberic, because golang http.Client doesn't support naming port: invalid URL port
-			if _, err = strconv.Atoi(port); err != nil {
-				return fmt.Errorf("advertise addr %s port invalid: %v", addr, err)
-			}
-		}
-	}
 	if req.LogLevel != nil {
 		if _, err := log.ParseLevel(*req.LogLevel); err != nil {
 			return err

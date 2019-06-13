@@ -26,11 +26,6 @@ var (
 			EnvVar: "TLS_KEY_FILE",
 		},
 		cli.StringFlag{
-			Name:   "advertise-addr",
-			Usage:  "The serving address that advertised to the public, eg: public_domain_address:88",
-			EnvVar: "ADVERTISE_ADDR",
-		},
-		cli.StringFlag{
 			Name:   "public-key-data",
 			Usage:  "The public key file path or text",
 			Value:  "/etc/adbot/keys/public.key.pem",
@@ -79,7 +74,6 @@ func runMaster(c *cli.Context) error {
 		Listen:        c.String("listen"),
 		TLSCert:       c.String("tls-cert"),
 		TLSKey:        c.String("tls-key"),
-		AdvertiseAddr: c.String("advertise-addr"),
 		PublicKeyData: c.String("public-key-data"),
 		UnixSock:      c.String("unix-sock"),
 		PidFile:       c.String("pid-file"),

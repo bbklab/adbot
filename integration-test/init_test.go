@@ -68,10 +68,11 @@ func newApiSuite() (*ApiSuite, error) {
 		return nil, err
 	}
 
-	err = client.Login(&types.ReqLogin{userName, types.Password(userPass)})
+	token, err := client.Login(&types.ReqLogin{userName, types.Password(userPass)})
 	if err != nil {
 		return nil, err
 	}
+	client.SetHeader("Admin-Access-Token", token)
 
 	// no need
 	// launch local-cluster already setup the default full-module license
@@ -89,15 +90,6 @@ func newApiSuite() (*ApiSuite, error) {
 	return &ApiSuite{
 		client: client,
 	}, nil
-}
-
-func loadDefaultLicense(client client.Client) error {
-	data, err := generateAssertLicense(fullModuleLicense)
-	if err != nil {
-		return err
-	}
-
-	return client.UpdateLicense([]byte(data))
 }
 
 func ensureDefaultUser(client client.Client) error {
@@ -132,10 +124,8 @@ func waitNodeGetOnline(client client.Client, maxWait time.Duration) error {
 			}
 			var idx int
 			for _, node := range nodes {
-				if !node.IsProtected() { // skip protected node
-					nodes[idx] = node
-					idx++
-				}
+				nodes[idx] = node
+				idx++
 			}
 			if len(nodes[:idx]) > 0 {
 				return nil

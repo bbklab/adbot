@@ -18,13 +18,6 @@ var (
 	NodeInstallJobAborted = "node installation job aborted while restart"
 )
 
-// nolint
-var (
-	NodeLabelKeyZone      = "_node_zone"      // preserved node label: node zone attribute
-	NodeLabelKeyType      = "_node_type"      // preserved node label: node type attribute
-	NodeLabelKeyProtected = "_node_protected" // preserved node label: node under protected attribute
-)
-
 // NodeWrapper wrap db node with related
 type NodeWrapper struct {
 	*Node
@@ -34,11 +27,9 @@ type NodeWrapper struct {
 
 // nolint
 var (
-	NodeStatusDeploying = "deploying"
-	NodeStatusOnline    = "online"
-	NodeStatusOffline   = "offline"
-	NodeStatusFlagging  = "flagging"
-	NodeStatusDeleting  = "deleting"
+	NodeStatusOnline   = "online"
+	NodeStatusOffline  = "offline"
+	NodeStatusFlagging = "flagging"
 )
 
 // Node is a db node

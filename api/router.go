@@ -63,6 +63,9 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/geo/metadata", s.showGeoMetadata)
 	mux.PATCH("/geo/update", s.updateGeoData)
 
+	// alipay userid qrcode
+	mux.GET("/alipay_userid_qrcode", s.getAlipayUserIDQrCode)
+
 	// adb nodes
 	mux.GET("/adb_nodes", s.listAdbNodes)
 	mux.GET("/adb_nodes/:node_id", s.getAdbNode)
@@ -88,9 +91,8 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 
 	// settings
 	mux.GET("/settings", s.getSettings)
-	mux.PATCH("/settings", s.updateSettings)                             // update all setting fields except `Attrs`
-	mux.PUT("/settings/reset", s.resetSettings)                          // reset all settings to initilial default values
-	mux.GET("/settings/advertise_addr/qrcode", s.genAdvertiseAddrQrCode) // gen advertise address QrCode image
+	mux.PATCH("/settings", s.updateSettings)    // update all setting fields except `Attrs`
+	mux.PUT("/settings/reset", s.resetSettings) // reset all settings to initilial default values
 	// global attrs (similar to node labels)
 	mux.PUT("/settings/attrs", s.setGlobalAttrs)
 	mux.DELETE("/settings/attrs", s.rmGlobalAttrs)

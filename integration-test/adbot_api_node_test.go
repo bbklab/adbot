@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -375,37 +373,6 @@ func (s *ApiSuite) TestNodeLabelRemoveConcurrency(c *check.C) {
 	costPrintln("TestNodeLabelRemoveConcurrency() passed", startAt)
 }
 
-func (s *ApiSuite) TestNodeDockerApi(c *check.C) {
-	startAt := time.Now()
-
-	assertnode := s.getAssertOnlineNode(c)
-
-	node, err := s.client.InspectNode(assertnode.ID)
-	c.Assert(err, check.IsNil)
-	c.Assert(node.Status, check.Equals, "online")
-
-	if node.SysInfo != nil && node.SysInfo.Docker.Version == "" {
-		costPrintln("TestNodeDockerApi() skipped", startAt)
-		return
-	}
-
-	req, _ := http.NewRequest("GET", "http://xxx/info", nil)
-	resp, err := s.client.RequestNodeDockerAPI(node.ID, req)
-	c.Assert(err, check.IsNil)
-	defer resp.Body.Close()
-
-	var dockerInfo map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&dockerInfo)
-	c.Assert(err, check.IsNil)
-	c.Assert(dockerInfo["DockerRootDir"], check.Not(check.Equals), "")
-	c.Assert(dockerInfo["Images"], check.Not(check.Equals), 0)
-	c.Assert(dockerInfo["Containers"], check.Not(check.Equals), 0)
-
-	costPrintln("TestNodeDockerApi() passed", startAt)
-}
-
-// utils
-//
 func (s *ApiSuite) doLaunchSshContainer() (string, error) {
 	return "", nil
 }

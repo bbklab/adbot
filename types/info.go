@@ -11,7 +11,7 @@ var summaryInfoTemplate = ` Version:       {{.Version}}
  Uptime:        {{.Uptime}}
  Store:         {{.StoreTyp}}
  AdbNodes:      online:{{.AdbNodes.Online}} offline:{{.AdbNodes.Offline}}
- AdbDevices:    online:{{.AdbDevices.Online}} offline:{{.AdbDevices.Offline}} overquota:{{.AdbDevices.OverQuota}}
+ AdbDevices:    online:{{.AdbDevices.Online}} offline:{{.AdbDevices.Offline}} overquota:{{.AdbDevices.OverQuota}} withinquota:{{.AdbDevices.WithinQuota}}
 `
 
 // SummaryInfo is exported
@@ -33,10 +33,11 @@ type AdbNodeSummary struct {
 
 // AdbDeviceSummary is exported
 type AdbDeviceSummary struct {
-	Total     int `json:"total"`
-	Online    int `json:"online"`
-	Offline   int `json:"offline"`
-	OverQuota int `json:"over_quota"`
+	Total       int `json:"total"`
+	Online      int `json:"online"`
+	Offline     int `json:"offline"`
+	OverQuota   int `json:"over_quota"`
+	WithinQuota int `json:"within_quota"`
 }
 
 // WriteTo is exported

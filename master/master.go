@@ -209,19 +209,9 @@ func (m *Master) initDBNodesStatus() {
 		log.Fatalln("db ListNodes() error:", err)
 	}
 	for _, node := range nodes {
-
-		// keep deleting node status unchange
-		if node.Status == types.NodeStatusDeleting {
-			continue
-		}
-
 		// mark node as offline
 		scheduler.MemoNodeStatus(node.ID, types.NodeStatusOffline, nil, nil)
-		if node.Status == types.NodeStatusDeploying {
-			scheduler.MemoNodeErrmsg(node.ID, types.NodeInstallJobAborted)
-		} else {
-			scheduler.MemoNodeErrmsg(node.ID, types.NodeWaittingFirstJoin)
-		}
+		scheduler.MemoNodeErrmsg(node.ID, types.NodeWaittingFirstJoin)
 	}
 }
 

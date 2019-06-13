@@ -28,9 +28,6 @@ func MemoNodeStatus(nodeID, status string, sysinfo *types.SysInfo, latency *time
 	if err != nil {
 		return err
 	}
-	if node.Status == types.NodeStatusDeleting { //  keep deleting node status unchange
-		return nil
-	}
 
 	setUpdator := bson.M{}
 	if status != "" {
@@ -117,9 +114,6 @@ func MemoSettings(update interface{}) error {
 // MemoSettingsSet update db Settings
 func MemoSettingsSet(req *types.UpdateSettingsReq) error {
 	setUpdator := bson.M{}
-	if req.AdvertiseAddr != nil {
-		setUpdator["advertise_addr"] = *req.AdvertiseAddr
-	}
 	if req.LogLevel != nil {
 		setUpdator["log_level"] = *req.LogLevel
 	}

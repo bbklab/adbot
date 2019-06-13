@@ -33,8 +33,10 @@ type AdbNode struct {
 // AdbDeviceWrapper is exported
 type AdbDeviceWrapper struct {
 	*AdbDevice
-	TodayBill   int `json:"today_bill"`
-	TodayAmount int `json:"today_amount"`
+	TodayBill       int     `json:"today_bill"`
+	TodayAmount     int     `json:"today_amount"`
+	TodayAmountYuan float64 `json:"today_amount_yuan"`
+	MaxAmountYuan   float64 `json:"max_amount_yuan"`
 }
 
 // AdbDevice is a db adb device

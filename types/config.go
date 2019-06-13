@@ -18,7 +18,6 @@ type MasterConfig struct {
 	Listen        string       `json:"listen"`             // must
 	TLSCert       string       `json:"tls_cert,omitempty"` // optional, if given, serving additional https protocol
 	TLSKey        string       `json:"tls_key,omitempty"`  // optional, if given, serving additional https protocol
-	AdvertiseAddr string       `json:"advertise_addr"`     // must
 	PublicKeyData string       `json:"public_key_data"`    // must, file or text
 	UnixSock      string       `json:"unix_sock"`          // optional
 	PidFile       string       `json:"pid_file"`           // optional
@@ -53,14 +52,6 @@ func (c *MasterConfig) Valid() error {
 				return err
 			}
 		}
-	}
-
-	if err := validator.String(c.AdvertiseAddr, 1, 1024, nil); err != nil {
-		return fmt.Errorf("advertise addr %v", err)
-	}
-
-	if _, _, err := net.SplitHostPort(c.AdvertiseAddr); err != nil {
-		return fmt.Errorf("advertise addr [%s] should be the format host:port", c.AdvertiseAddr)
 	}
 
 	// we're expecting a valid pem public key

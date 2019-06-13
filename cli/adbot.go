@@ -33,7 +33,7 @@ var (
 	AdbDeviceTableHeader  = "DEVICE ID\tNODE ID\t" + color.Yellow("STATUS") + "\tWEIGHT\tBILL\tAMOUNT\tMANUFACTURER & MODEL\tANDROID VERSION\tBATTERY\tBOOT AT\t\n"
 	AdbDeviceTableStatus  = "{{if eq .Status \"online\"}}{{green .Status}}{{else}}{{red .Status}}{{end}}"
 	AdbDeviceTableBattery = "{{$level := multiply .SysInfo.Battery.Level 100}}{{divide $level .SysInfo.Battery.Scale 0}}%" // (100*level/scale)%
-	AdbDeviceTableLine    = "{{.ID}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.TodayBill}}/{{.MaxBill}}\t{{.TodayAmount}}/{{.MaxAmount}}\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
+	AdbDeviceTableLine    = "{{.ID}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.TodayBill}}/{{.MaxBill}}\t{{.TodayAmountYuan}}/{{.MaxAmountYuan}}\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
 )
 
 var (
@@ -167,7 +167,7 @@ func adbDeviceSetBillCommand() cli.Command {
 func adbDeviceSetAmountCommand() cli.Command {
 	return cli.Command{
 		Name:      "set-amount",
-		Usage:     "set abb device max amount perday, must between [0-100000000], 0 means unlimited",
+		Usage:     "set abb device max amount perday, by CNY, must between [0-100000000], 0 means unlimited",
 		ArgsUsage: "DEVICE",
 		Flags:     setAdbDeviceAmountFlags,
 		Action:    setAdbDeviceAmount,
@@ -355,7 +355,7 @@ func setAdbDeviceAmount(c *cli.Context) error {
 
 	var (
 		dvcID  = c.Args().First()
-		amount = c.Int("value")
+		amount = c.Int("value") * 100
 	)
 
 	if dvcID == "" {

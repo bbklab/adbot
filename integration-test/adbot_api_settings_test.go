@@ -30,22 +30,12 @@ func (s *ApiSuite) TestSettingUpdate(c *check.C) {
 	saved, err := s.client.GetSettings()
 	c.Assert(err, check.IsNil)
 	c.Assert(saved, check.NotNil)
-	if saved.AdvertiseAddr == "" {
-		saved.AdvertiseAddr = "bbklab.me:8008"
-	}
 
 	// test invalid updates
 	var datas = map[*types.UpdateSettingsReq]string{
-		&types.UpdateSettingsReq{AdvertiseAddr: ptype.String("")}:                   "400 - .*advertise addr required, can't be empty.*",
-		&types.UpdateSettingsReq{AdvertiseAddr: ptype.String("abc")}:                "400 - .*advertise addr .* should be the format host:port.*",
-		&types.UpdateSettingsReq{AdvertiseAddr: ptype.String("192.168.1.1")}:        "400 - .*advertise addr .* should be the format host:port.*",
-		&types.UpdateSettingsReq{AdvertiseAddr: ptype.String("192.168.1.1:abc")}:    "400 - .*advertise addr .* port invalid.*",
-		&types.UpdateSettingsReq{AdvertiseAddr: ptype.String("192.168.1.1:80,xxx")}: "400 - .*advertise addr xxx should be the format host:port.*",
-		&types.UpdateSettingsReq{LogLevel: ptype.String("")}:                        "400 - .*not a valid logrus Level.*",
-		&types.UpdateSettingsReq{LogLevel: ptype.String("xxx")}:                     "400 - .*not a valid logrus Level.*",
-		&types.UpdateSettingsReq{LogLevel: ptype.String("")}:                        "400 - .*not a valid logrus Level.*",
-		&types.UpdateSettingsReq{MetricsAuthUser: ptype.String("")}:                 "400 - .*metrics basic authentication user and password required.*",
-		&types.UpdateSettingsReq{MetricsAuthPassword: ptype.String("")}:             "400 - .*metrics basic authentication user and password required.*",
+		&types.UpdateSettingsReq{LogLevel: ptype.String("")}:    "400 - .*not a valid logrus Level.*",
+		&types.UpdateSettingsReq{LogLevel: ptype.String("xxx")}: "400 - .*not a valid logrus Level.*",
+		&types.UpdateSettingsReq{LogLevel: ptype.String("")}:    "400 - .*not a valid logrus Level.*",
 	}
 	for new, errmsg := range datas {
 		_, err = s.client.UpdateSettings(new)
@@ -55,25 +45,21 @@ func (s *ApiSuite) TestSettingUpdate(c *check.C) {
 
 	// test normal update
 	req := &types.UpdateSettingsReq{
-		AdvertiseAddr: ptype.String("bbklab.me:8008"),
-		LogLevel:      ptype.String("info"),
+		LogLevel: ptype.String("info"),
 	}
 	ret, err := s.client.UpdateSettings(req)
 	c.Assert(err, check.IsNil)
 	c.Assert(ret, check.NotNil)
-	c.Assert(ret.AdvertiseAddr, check.Equals, ptype.StringV(req.AdvertiseAddr))
 	c.Assert(ret.LogLevel, check.Equals, ptype.StringV(req.LogLevel))
 
 	current, err := s.client.GetSettings()
 	c.Assert(err, check.IsNil)
 	c.Assert(current, check.NotNil)
-	c.Assert(current.AdvertiseAddr, check.Equals, ptype.StringV(req.AdvertiseAddr))
 	c.Assert(current.LogLevel, check.Equals, ptype.StringV(req.LogLevel))
 
 	// set back
 	ret, err = s.client.UpdateSettings(&types.UpdateSettingsReq{
-		AdvertiseAddr: ptype.String(saved.AdvertiseAddr),
-		LogLevel:      ptype.String(saved.LogLevel),
+		LogLevel: ptype.String(saved.LogLevel),
 	})
 	c.Assert(err, check.IsNil)
 	c.Assert(ret, check.NotNil)
@@ -88,9 +74,6 @@ func (s *ApiSuite) TestSettingReset(c *check.C) {
 	saved, err := s.client.GetSettings()
 	c.Assert(err, check.IsNil)
 	c.Assert(saved, check.NotNil)
-	if saved.AdvertiseAddr == "" {
-		saved.AdvertiseAddr = "bbklab.me:8008"
-	}
 
 	// reset
 	err = s.client.ResetSettings()
@@ -99,18 +82,13 @@ func (s *ApiSuite) TestSettingReset(c *check.C) {
 	settings, err := s.client.GetSettings()
 	c.Assert(err, check.IsNil)
 	c.Assert(settings, check.NotNil)
-	c.Assert(settings.AdvertiseAddr, check.Equals, "")
 	c.Assert(settings.LogLevel, check.Equals, "info")
 	c.Assert(settings.UpdatedAt.IsZero(), check.Equals, true)
 	c.Assert(settings.Initial, check.Equals, true)
 
 	// set back
 	ret, err := s.client.UpdateSettings(&types.UpdateSettingsReq{
-		AdvertiseAddr:       ptype.String(saved.AdvertiseAddr),
-		LogLevel:            ptype.String(saved.LogLevel),
-		MetricsAuthUser:     ptype.String(saved.MetricsAuthUser),
-		MetricsAuthPassword: ptype.String(saved.MetricsAuthPassword),
-		MaxDistributeSize:   ptype.Int64(saved.MaxDistributeSize),
+		LogLevel: ptype.String(saved.LogLevel),
 	})
 	c.Assert(err, check.IsNil)
 	c.Assert(ret, check.NotNil)

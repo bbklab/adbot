@@ -603,9 +603,11 @@ func (s *Server) countAdbDevicesStatus(dvcs []*types.AdbDevice) (int64, int64) {
 func (s *Server) wrapAdbDevice(dvc *types.AdbDevice) *types.AdbDeviceWrapper {
 	num, fee := scheduler.CountAdbDeviceThisDayOrders(dvc.ID)
 	return &types.AdbDeviceWrapper{
-		AdbDevice:   dvc,
-		TodayBill:   num,
-		TodayAmount: fee,
+		AdbDevice:       dvc,
+		TodayBill:       num,
+		TodayAmount:     fee,
+		TodayAmountYuan: float64(fee) / float64(100),
+		MaxAmountYuan:   float64(dvc.MaxAmount) / float64(100),
 	}
 }
 

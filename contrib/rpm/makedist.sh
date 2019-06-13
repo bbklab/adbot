@@ -107,6 +107,7 @@ if [ "${target}" == "master" ]; then
 
 	# first build agent rpm and save to masater's share directory
 	buildTarget "agent"
+	mkdir -p adbot-master/share/
 	mv -fv ${DISTDIR}/adbot-agent*.rpm adbot-master/share/agent.pkg
 	sha1sum adbot-master/share/agent.pkg | cut -d " " -f1 > adbot-master/share/agent.pkg.sha1sum
 
