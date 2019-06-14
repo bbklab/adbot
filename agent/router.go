@@ -27,4 +27,5 @@ func (agent *Agent) setupRoutes(mux *httpmux.Mux) {
 
 	// adb bot
 	mux.GET("/adbot/devices", agent.listAdbDevices)
+	mux.GET("/adbot/alipay_order", agent.checkAdbAlipayOrder)
 }

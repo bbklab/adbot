@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	unmaskSensitive bool // unmask the sensitive fields when api response
+	unmaskSensitive bool   // unmask the sensitive fields when api response
+	payGateSecret   string // paygate secret
 )
 
 func (s *Server) getSettings(ctx *httpmux.Context) {
@@ -143,6 +144,7 @@ func (s *Server) applyRuntimeSettings() error {
 	s.mux.SetDebug(current.EnableHTTPMuxDebug)
 
 	unmaskSensitive = current.UnmarkSensitive
+	payGateSecret = current.GlobalAttrs.Get(types.GlobalAttrPaygateSecretKey)
 
 	scheduler.RenewTGBot(current.TGBotToken)
 

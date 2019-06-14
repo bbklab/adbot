@@ -7,6 +7,7 @@ import (
 	maxminddb "github.com/oschwald/maxminddb-golang"
 
 	"github.com/bbklab/adbot/debug"
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/types"
 )
@@ -52,6 +53,9 @@ type Client interface {
 	SetAdbDeviceWeight(id string, val int) error
 	BindAdbDeviceAlipay(id string, alipay *types.AlipayAccount) error
 	RevokeAdbDeviceAlipay(id string) error
+
+	ReportAdbEvent(ev *adbot.AdbEvent) error // public, used by adb node to report adb events
+	WatchAdbEvents() (io.ReadCloser, error)
 
 	GetSettings() (*types.Settings, error)
 	UpdateSettings(req *types.UpdateSettingsReq) (*types.Settings, error)

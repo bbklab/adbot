@@ -82,13 +82,16 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	// mux.DELETE("/adb_devices/:device_id", s.rmAdbDevice) // TODO
 	// adb orders
 	mux.GET("/adb_orders", s.listAdbOrders)
-	// adb order hook, receive adb order status hook
-	//  - called by adb nodes (TODO how to identify & autheticated ?)
-	mux.POST("/adb_orders/hook", s.hookAdbOrder)
+	mux.GET("/adb_orders/:order_id", s.getAdbOrder)
+	mux.PUT("/adb_orders/:order_id/recallback", s.reCallbackAdbOrder)
+	// adb public api
+	mux.GET("/adb_public_api", s.getAdbPublicAPIDocs)
 	// adb paygate
 	//  - called by out side pay system, only autheticated by secret header (TODO more authetications)
 	mux.POST("/adb_paygate/new", s.newAdbOrder)
-	mux.POST("/adb_paygate/check", s.checkAdbOrder)
+	// adb events
+	mux.POST("/adb_events", s.receiveAdbEvents) // public, used by adbnode
+	mux.GET("/adb_events", s.watchAdbEvents)
 
 	// settings
 	mux.GET("/settings", s.getSettings)

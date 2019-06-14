@@ -218,12 +218,6 @@ func MemoAdbOrderCallback(orderID string, cb *types.NewAdbOrderCallback) error {
 	return store.DB().UpdateAdbOrder(orderID, update)
 }
 
-// MemoAdbOrderInnerCallback update db Adb Order's InnerCallback
-func MemoAdbOrderInnerCallback(orderID string, cb interface{}) error {
-	update := bson.M{"$set": bson.M{"inner_callback": cb}}
-	return store.DB().UpdateAdbOrder(orderID, update)
-}
-
 // MemoAdbOrderCallbackStatus update db Adb Order's CallbackStatus
 func MemoAdbOrderCallbackStatus(orderID, status string) error {
 	update := bson.M{"$set": bson.M{"callback_status": status}}

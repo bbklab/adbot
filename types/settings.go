@@ -15,6 +15,11 @@ var (
 	SensitiveHolder = "******"
 )
 
+// nolint
+var (
+	GlobalAttrPaygateSecretKey = "com_adbbot_paygate_secret"
+)
+
 var (
 	// GlobalDefaultSettings define the default settings
 	// applied on the first startup or settings reset

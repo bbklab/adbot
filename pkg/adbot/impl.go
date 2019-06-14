@@ -52,19 +52,18 @@ func (a *Adb) WatchAdbEvents() (<-chan *AdbEvent, chan struct{}) {
 			var (
 				serial = ev.Serial
 				event  string
+				msg    = fmt.Sprintf("%s->%s", ev.OldState, ev.NewState)
 			)
 
 			switch {
 			case ev.CameOnline():
-				event = AdbEventAlive
+				event = AdbEventDeviceAlive
 			case ev.WentOffline():
-				event = AdbEventDie
-			default:
-				event = fmt.Sprintf("%s->%s", ev.OldState, ev.NewState)
+				event = AdbEventDeviceDie
 			}
 
 			select {
-			case ch <- &AdbEvent{Serial: serial, Event: event}:
+			case ch <- &AdbEvent{Serial: serial, Type: event, Message: msg, Time: time.Now()}:
 			case <-stopch:
 				return
 			default:

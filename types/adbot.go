@@ -115,7 +115,6 @@ type AdbOrder struct {
 	Callback        *NewAdbOrderCallback            `json:"callback" bson:"callback"`                 // step4: order callback -> to out side
 	CallbackStatus  string                          `json:"callback_status" bson:"callback_status"`   // callback status: none, ongoing, succeed, error
 	CallbackHistory []string                        `json:"callback_history" bson:"callback_history"` // callback history with all failure retries
-	InnerCallback   *InnerPayCallback               `json:"inner_callback" bson:"inner_callback"`     // step3: adb order inner pay callback <- from adb devices
 	CreatedAt       time.Time                       `json:"created_at" bson:"created_at"`
 	PaidAt          time.Time                       `json:"paid_at" bson:"paid_at"`
 }
@@ -181,11 +180,4 @@ type NewAdbOrderCallback struct {
 	Fee        int       `json:"fee" bson:"fee"`                   // order fee
 	Attach     string    `json:"attach" bson:"attach"`             // out side custom data, return unchanged
 	Time       time.Time `json:"time" bson:"time"`                 // set by us, only used for tracking order steps time line
-}
-
-// InnerPayCallback is exported
-type InnerPayCallback struct {
-	Callback  map[string]interface{} `json:"callback" bson:"callback"`                         // don't use tag `,inline` as we don't know if it has dup field name `time`
-	WaitError string                 `json:"wait_error,omitempty" bson:"wait_error,omitempty"` // set by us, only used for tracking waitting inner callback error message
-	Time      time.Time              `json:"time" bson:"time"`                                 // set by us, only used for tracking order steps time line
 }

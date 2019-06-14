@@ -12,8 +12,10 @@ import (
 
 	"github.com/bbklab/adbot/api"
 	"github.com/bbklab/adbot/master/ha"
+	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/pkg/mole"
 	"github.com/bbklab/adbot/pkg/pidfile"
+	"github.com/bbklab/adbot/pkg/utils"
 	"github.com/bbklab/adbot/scheduler"
 	"github.com/bbklab/adbot/store"
 	"github.com/bbklab/adbot/types"
@@ -177,8 +179,9 @@ ELECT:
 				scheduler.SetLeader(true)        // then scheduler knows the current role, it's background loops(guarders) will be enabled
 
 				// launch background `watcher like` goroutines
-				m.launchAdbDeviceGuarder()
 				m.launchUserSessionsCleaner()
+				m.launchAdbDeviceGuarder()
+				m.launchAdbEventWatcher()
 				log.Printf("master in serving now.")
 			}
 		}
@@ -187,17 +190,20 @@ ELECT:
 
 // set initial default settings if no global settings set
 func (m *Master) initDBGlobalSettings() {
-	_, err := store.DB().GetSettings()
-	if err == nil {
-		log.Println("db global settings already ready")
-		return
-	}
-
 	// if previous settings not exists, db save initial default settings
-	if store.DB().ErrNotFound(err) {
+	if _, err := store.DB().GetSettings(); store.DB().ErrNotFound(err) {
 		err = scheduler.MemoSettings(types.GlobalDefaultSettings)
 		if err != nil {
 			log.Fatalln("setup db global default settings error:", err)
+		}
+	}
+
+	// if previous paygate secret not exists, db save a new one
+	curr, _ := store.DB().GetSettings()
+	if curr.GlobalAttrs.Get(types.GlobalAttrPaygateSecretKey) == "" {
+		err := scheduler.UpsertSettingsAttr(label.Labels{types.GlobalAttrPaygateSecretKey: "0" + utils.RandomString(30) + "x"})
+		if err != nil {
+			log.Fatalf("setup db global settings attr %s error: %v", types.GlobalAttrPaygateSecretKey, err)
 		}
 	}
 }
@@ -243,17 +249,25 @@ func (m *Master) initDBAdbOrderCallbackStatus() {
 	go scheduler.BootupReCallbackAbortedAdbOrders(orders)
 }
 
-// launchAdbDeviceGuarder
-//  - launch adb device perday limit quota checker
-// note: skip already launched guarder goroutines
+// launch user sessions cleaner
+func (m *Master) launchUserSessionsCleaner() {
+	if !scheduler.IsRegisteredGoRoutine("user_sessions_cleaner", "system") {
+		go scheduler.CleanExpiredUserSessionsLoop()
+	}
+}
+
+// launch adb device perday limit quota checker
 func (m *Master) launchAdbDeviceGuarder() {
 	if !scheduler.IsRegisteredGoRoutine("adb_devices_limit_checker", "system") {
 		go scheduler.RunAdbDeviceLimitCheckerLoop()
 	}
 }
 
-func (m *Master) launchUserSessionsCleaner() {
-	go scheduler.CleanExpiredUserSessionsLoop()
+// launch adb device event watcher
+func (m *Master) launchAdbEventWatcher() {
+	if !scheduler.IsRegisteredGoRoutine("adb_events_watcher", "system") {
+		go scheduler.RunAdbEventWatcherLoop()
+	}
 }
 
 func (m *Master) exitTrap() {

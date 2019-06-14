@@ -2,8 +2,10 @@ package client
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/types"
 )
 
@@ -165,4 +167,36 @@ func (c *AdbotClient) RevokeAdbDeviceAlipay(id string) error {
 	}
 
 	return nil
+}
+
+// ReportAdbEvent implement Client interface
+func (c *AdbotClient) ReportAdbEvent(ev *adbot.AdbEvent) error {
+	resp, err := c.sendRequest("POST", "/api/adb_events", ev, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
+// WatchAdbEvents implement Client interface
+func (c *AdbotClient) WatchAdbEvents() (io.ReadCloser, error) {
+	resp, err := c.sendRequest("GET", "/api/adb_events", nil, 0, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, &APIError{code, string(bs)}
+	}
+
+	return resp.Body, nil
 }
