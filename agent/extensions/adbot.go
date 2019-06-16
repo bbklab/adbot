@@ -1,35 +1,211 @@
 package extensions
 
 import (
+	"fmt"
+	"strings"
 	"sync"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/bbklab/adbot/pkg/adbot"
+	"github.com/bbklab/adbot/pkg/routine"
 )
 
 var (
-	adb adbot.AdbHandler
+	am   *adbMgr // runtime adb managers
+	amux sync.Mutex
 )
 
-func setupAdbotHandler() error {
-	var err error
-	if adb == nil {
-		adb, err = adbot.NewAdb()
+func setupAdbotMgr() error {
+	amux.Lock()
+	defer amux.Unlock()
+
+	if am != nil {
+		return nil
+	}
+
+	ah, err := adbot.NewAdb()
+	if err != nil {
+		return err
+	}
+
+	am = &adbMgr{
+		ah:  ah,
+		dhs: make(map[string]adbot.AdbDeviceHandler),
+		reg: routine.NewRegistry(),
+	}
+	go am.watchAllDeviceEvents()
+	go am.watchAllDeviceAlipayActivity()
+
+	return nil
+}
+
+type adbMgr struct {
+	ah         adbot.AdbHandler                  // adb handler (father adb handler)
+	dhs        map[string]adbot.AdbDeviceHandler // map of device handlers
+	sync.Mutex                                   // protect above map
+	reg        *routine.Registry                 // device watcher goroutine registry
+}
+
+// getDevice get or insert given device id handler
+func (mgr *adbMgr) getDevice(id string) adbot.AdbDeviceHandler {
+	mgr.Lock()
+	defer mgr.Unlock()
+
+	dh, ok := mgr.dhs[id]
+	if ok {
+		return dh
+	}
+
+	// add new device handler
+	newdh := mgr.ah.NewDevice(id)
+	mgr.dhs[id] = newdh
+
+	// launch new device alipay watcher
+	if !mgr.reg.ExistsRoutine("adb_device_alipay_watcher", id) {
+		go mgr.watchDeviceAlipay(newdh, id)
+	}
+
+	return newdh
+}
+
+func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
+	var (
+		loopName = fmt.Sprintf("device %s alipay order watcher loop", id)
+	)
+
+	log.Printf("starting %s ...", loopName)
+	defer log.Warnf("stopped %s", loopName)
+
+	mgr.reg.AddRoutine("adb_device_alipay_watcher", id)
+	defer mgr.reg.DelRoutine("adb_device_alipay_watcher", id)
+
+	ticker := time.NewTicker(time.Second * 60)
+	defer ticker.Stop()
+
+	ch, stopch := dvc.WatchSysNotifies()
+	defer close(stopch)
+
+	for {
+		var (
+			err error
+			msg string
+		)
+
+		select {
+		case sysNotify := <-ch:
+			if sysNotify.Source != "com.eg.android.AlipayGphone" {
+				continue // skip
+			}
+
+			msg = sysNotify.Message
+			ev := &adbot.AdbEvent{
+				Serial:  id,
+				Type:    adbot.AdbEventAlipayOrder,
+				Message: msg,
+				Time:    time.Now(),
+			}
+			err = reportAdbEvent(ev)
+
+		case <-ticker.C:
+			msg = "NOOP ALIPAY EVENT IN CASE OF MISSING SYSNOTIFY"
+			ev := &adbot.AdbEvent{
+				Serial:  id,
+				Type:    adbot.AdbEventAlipayOrder,
+				Message: msg,
+				Time:    time.Now(),
+			}
+			err = reportAdbEvent(ev)
+		}
+
 		if err != nil {
-			return err
+			log.Warnf("report alipay order event to master error: %v - [%s]", err, msg)
+		} else {
+			log.Infof("report alipay order event to master succeed - [%s]", msg)
 		}
 	}
-	return nil
+}
+
+// watch all device's event
+func (mgr *adbMgr) watchAllDeviceEvents() {
+	var (
+		loopName = fmt.Sprintf("all devices events watcher loop")
+	)
+
+	log.Printf("starting %s ...", loopName)
+	defer log.Warnf("stopped %s", loopName)
+
+	mgr.reg.AddRoutine("adb_device_event_watcher", "system")
+	defer mgr.reg.DelRoutine("adb_device_event_watcher", "system")
+
+	ch, stopch := mgr.ah.WatchAdbEvents()
+	defer close(stopch)
+
+	for ev := range ch {
+		if err := reportAdbEvent(ev); err != nil {
+			log.Warnf("report adb device event to master error: %v - [%s]", err, ev.Message)
+		} else {
+			log.Infof("report adb device event to master succeed - [%s]", ev.Message)
+		}
+	}
+}
+
+// ensure all device's alipay is the top activity
+func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
+	var (
+		loopName = fmt.Sprintf("all devices alipay activity watcher loop")
+	)
+
+	log.Printf("starting %s ...", loopName)
+	defer log.Warnf("stopped %s", loopName)
+
+	mgr.reg.AddRoutine("adb_alipay_activity_watcher", "system")
+	defer mgr.reg.DelRoutine("adb_alipay_activity_watcher", "system")
+
+	ticker := time.NewTicker(time.Second * 30)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		ids, _ := am.ah.ListAdbDevices()
+		for _, id := range ids {
+			dvc := am.getDevice(id)
+
+			if !dvc.IsAwake() {
+				dvc.AwakenScreen()
+				dvc.SwipeUpUnlock()
+				dvc.GotoHome()
+			}
+
+			if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
+				dvc.StartAliPay()
+			}
+		}
+	}
+}
+
+func reportAdbEvent(ev *adbot.AdbEvent) error {
+	var (
+		client = GetMasterAPIClient()
+		err    error
+	)
+	for i := 1; i <= 3; i++ {
+		err = client.ReportAdbEvent(ev)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second * time.Duration(i))
+	}
+	return err
 }
 
 // ListAdbDevices return the adb devices list
 func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
-	if err := setupAdbotHandler(); err != nil {
+	if err := setupAdbotMgr(); err != nil {
 		return nil, err
 	}
 
-	ids, err := adb.ListAdbDevices()
+	ids, err := am.ah.ListAdbDevices()
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +220,7 @@ func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
 		go func(id string) {
 			defer wg.Done()
 
-			dvc := adb.NewDevice(id)
+			dvc := am.getDevice(id)
 			info, err := dvc.SysInfo()
 			if err != nil {
 				log.Errorln("get adb device sysinfo error", id, err)
@@ -59,4 +235,20 @@ func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
 	wg.Wait()
 
 	return ret, nil
+}
+
+// CheckAdbAlipayOrder check one alipay order on given adb device
+func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
+	dvc := am.getDevice(dvcID)
+
+	if !dvc.IsAwake() {
+		err := dvc.AwakenScreen()
+		if err != nil {
+			return nil, err
+		}
+		dvc.SwipeUpUnlock()
+		dvc.GotoHome()
+	}
+
+	return dvc.AlipaySearchOrder(orderID)
 }

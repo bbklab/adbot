@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/balancer"
 	"github.com/bbklab/adbot/pkg/mole"
 	"github.com/bbklab/adbot/pkg/qrcode"
@@ -43,9 +45,8 @@ func SubscribeAdbOrderAndSendCallback(orderID string) {
 	defer DeRegisterGoroutine("adb_order_callback", orderID)
 
 	// wait adb order callback event
-	err := subscribeAdbOrderCallbackEvent(orderID, subTimeout)
+	err := SubscribeAdbOrderCallbackEvent(orderID, subTimeout)
 	if err != nil {
-		MemoAdbOrderInnerCallback(orderID, &types.InnerPayCallback{Callback: nil, WaitError: err.Error(), Time: time.Now()})
 		MemoAdbOrderStatus(orderID, types.AdbOrderStatusTimeout)
 		return
 	}
@@ -168,9 +169,9 @@ func SmartPickupAdbDevice(req *types.NewAdbOrderReq) (*types.AdbDevice, error) {
 	}
 	switch req.QRType {
 	case types.QRCodeTypeAlipay:
-		query["alipay"] = bson.M{"$ne": "null"}
+		query["alipay"] = bson.M{"$ne": nil}
 	case types.QRCodeTypeWxpay:
-		query["wxpay"] = bson.M{"$ne": "null"}
+		query["wxpay"] = bson.M{"$ne": nil}
 	}
 	dvcs, _ := store.DB().ListAdbDevices(nil, query)
 	if len(dvcs) == 0 {
@@ -436,6 +437,78 @@ func adbNodeRefreshOnce(nodeID string) error {
 	}
 
 	return nil
+}
+
+// RunAdbEventWatcherLoop watch all adb events and handle them
+func RunAdbEventWatcherLoop() {
+	var (
+		loopName = fmt.Sprintf("adb events watcher loop")
+	)
+
+	RegisterGoroutine("adb_events_watcher", "system")
+	defer DeRegisterGoroutine("adb_events_watcher", "system")
+
+	log.Printf("starting %s ...", loopName)
+	defer log.Warnf("stopped %s, node maybe removed", loopName)
+
+	// obtain adb device subscriber
+	sub := SubscribeAdbDeviceEvents()
+	defer EvictAdbDeviceEvents(sub)
+
+	// periodically timer notifier
+	ticker := time.NewTicker(time.Second * 30)
+	defer ticker.Stop()
+
+	// write adb device event to the client with sse format
+	for ev := range sub {
+		var (
+			adbev = ev.(*adbot.AdbEvent)
+			dvcid = adbev.Serial
+			typ   = adbev.Type
+		)
+		switch typ {
+		case adbot.AdbEventDeviceDie:
+			MemoAdbDeviceStatus(dvcid, types.AdbDeviceStatusOffline, "adb device offline event")
+		case adbot.AdbEventDeviceAlive:
+			MemoAdbDeviceStatus(dvcid, types.AdbDeviceStatusOnline, "")
+		case adbot.AdbEventAlipayOrder:
+			go checkDevicePendingOrders(dvcid)
+		}
+	}
+}
+
+// sequential check device pending orders
+var dvcpendingmux sync.Mutex
+
+// note: only check pending orders within 5 minutes
+func checkDevicePendingOrders(dvcid string) {
+	dvcpendingmux.Lock()
+	defer dvcpendingmux.Unlock()
+
+	RegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
+	defer DeRegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
+
+	// query device pending orders within 5m
+	query := bson.M{"device_id": dvcid, "status": types.AdbOrderStatusPending, "created_at": bson.M{"$gt": time.Now().Add(-time.Minute * 5)}}
+	orders, err := store.DB().ListAdbOrders(nil, query)
+	if err != nil {
+		log.Errorf("query pending adb orders for device %s error: %v", dvcid, err)
+		return
+	}
+
+	for _, order := range orders {
+		nid, dvcid, orderid := order.NodeID, order.DeviceID, order.ID
+		_, err := DoNodeCheckAdbOrder(nid, dvcid, orderid)
+		if err != nil {
+			log.Warnf("query node %s adb device %s order %s error: %v", nid, dvcid, orderid, err)
+			return
+		}
+		// now we got the order on node adb device, then
+		//  - memo update the node status as paid
+		//  - publish adb event -> triger sending order callback
+		MemoAdbOrderStatus(order.ID, types.AdbOrderStatusPaid)
+		PublishAdbOrderCallbackEvent(order.ID)
+	}
 }
 
 //

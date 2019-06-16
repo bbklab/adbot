@@ -4,11 +4,16 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path"
 	"strconv"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/httpmux"
 	"github.com/bbklab/adbot/pkg/utils"
 	"github.com/bbklab/adbot/pkg/validator"
@@ -368,20 +373,32 @@ func (s *Server) verifyAdbDevice(ctx *httpmux.Context) {
 
 func (s *Server) listAdbOrders(ctx *httpmux.Context) {
 	var (
-		status  = ctx.Query["status"]
-		nid     = ctx.Query["node_id"]
-		device  = ctx.Query["device_id"]
-		startAt = ctx.Query["start_at"]
-		endAt   = ctx.Query["end_at"]
-		query   = bson.M{}
+		search     = ctx.Query["search"] // search id or out_order_id
+		orderID    = ctx.Query["order_id"]
+		outOrderID = ctx.Query["out_order_id"]
+		status     = ctx.Query["status"]
+		cbstatus   = ctx.Query["cbstatus"]
+		device     = ctx.Query["device_id"]
+		startAt    = ctx.Query["start_at"]
+		endAt      = ctx.Query["end_at"]
+		query      = bson.M{}
 	)
 
 	// build query
+	if search != "" {
+		query["$or"] = []bson.M{{"id": search}, {"out_order_id": search}}
+	}
+	if orderID != "" {
+		query["id"] = orderID
+	}
+	if outOrderID != "" {
+		query["out_order_id"] = outOrderID
+	}
 	if status != "" {
 		query["status"] = status
 	}
-	if nid != "" {
-		query["node_id"] = nid
+	if cbstatus != "" {
+		query["callback_status"] = cbstatus
 	}
 	if device != "" {
 		query["device_id"] = device
@@ -440,61 +457,77 @@ func (s *Server) listAdbOrders(ctx *httpmux.Context) {
 	ctx.JSON(200, wraps)
 }
 
-//
-// adb payhook
-//  - public apis (visit by each adb nodes)
-//  - protected by https (TODO)
-//  - protected by fixed access token: ADB-HOOK-Secret
-//
-var (
-	AdbPayHookHeaderKey    = "ADB-HOOK-Secret"
-	AdbPayHookAccessSecret = "98093efz97ca47db7a2em402a0608696eebe3a4z"
-)
-
-func (s *Server) hookAdbOrder(ctx *httpmux.Context) {
-	// check the fixed payhook token
-	if ctx.Req.Header.Get(AdbPayHookHeaderKey) != AdbPayHookAccessSecret {
-		ctx.Forbidden("adbhook secret deny")
-		return
-	}
-
-	// get the request's order notify event message
+func (s *Server) getAdbOrder(ctx *httpmux.Context) {
 	var (
-		params  = ctx.Query
-		orderID = ctx.Query["order_id"] // order_id
-		code    = ctx.Query["code"]
+		id = ctx.Path["order_id"]
 	)
 
-	// get the db adbpay order firstly
-	order, err := store.DB().GetAdbOrder(orderID)
+	order, err := store.DB().GetAdbOrder(id)
 	if err != nil {
-		ctx.AutoError(fmt.Sprintf("get db adb order %s error: %v", orderID, err))
+		ctx.AutoError(err)
 		return
 	}
 
-	// memo update the order's inner callback
-	// convert query params to expect data type
-	cb := map[string]interface{}{}
-	for key, val := range params {
-		cb[key] = val
-	}
-	scheduler.MemoAdbOrderInnerCallback(orderID, &types.InnerPayCallback{Callback: cb, WaitError: "", Time: time.Now()})
+	ctx.JSON(200, s.wrapAdbOrder(order))
+}
 
-	// memo update the order's status
-	if code != "1" {
-		ctx.BadRequest("hook adb order code invalid, only `1` acceptable")
-		return
-	}
-	err = scheduler.MemoAdbOrderStatus(orderID, types.AdbOrderStatusPaid)
+func (s *Server) reCallbackAdbOrder(ctx *httpmux.Context) {
+	var (
+		id = ctx.Path["order_id"]
+	)
+
+	order, err := store.DB().GetAdbOrder(id)
 	if err != nil {
-		ctx.AutoError(fmt.Sprintf("update db adb order status error: %v", err))
+		ctx.AutoError(err)
 		return
 	}
 
-	// publish order callback event
-	scheduler.PublishAdbOrderCallbackEvent(order.ID)
+	if order.CallbackStatus == types.AdbOrderCallbackStatusSucceed {
+		ctx.Status(204)
+		return
+	}
 
+	if order.CallbackStatus == types.AdbOrderCallbackStatusOngoing {
+		ctx.Conflict("another order callback ongoing")
+		return
+	}
+
+	scheduler.MemoAdbOrderCallbackStatus(order.ID, types.AdbOrderCallbackStatusOngoing)
+	err = scheduler.SendAdbOrderCallback(order.ID, nil) // send once, no retry
+	if err != nil {
+		ctx.AutoError(err)
+		scheduler.MemoAdbOrderCallbackStatus(order.ID, types.AdbOrderCallbackStatusError) // see callback history
+		return
+	}
+
+	scheduler.MemoAdbOrderCallbackStatus(order.ID, types.AdbOrderCallbackStatusSucceed)
 	ctx.Status(200)
+}
+
+//
+// public api docs
+//
+
+func (s *Server) getAdbPublicAPIDocs(ctx *httpmux.Context) {
+	file, sha1sum, err := scheduler.GetResFile("public-api")
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	fd, err := os.Open(file)
+	if err != nil {
+		ctx.InternalServerError(err)
+		return
+	}
+	defer fd.Close()
+
+	ctx.Res.Header().Set("Content-Type", "application/octet-stream")
+	ctx.Res.Header().Set("Content-Disposition", "attachment; filename="+path.Base(file))
+	if sha1sum != "" {
+		ctx.Res.Header().Set("Sha1sum", sha1sum)
+	}
+	io.Copy(ctx.Res, fd)
 }
 
 //
@@ -502,13 +535,8 @@ func (s *Server) hookAdbOrder(ctx *httpmux.Context) {
 //  - public apis (visit by out side pay system)
 //  - protected by https (TODO)
 //  - protected by ip range check (TODO)
-//  - protected by fixed access token: ADB-PAYGATE-Secret
+//  - protected by fixed access token: ADB-PAYGATE-SECRET
 //
-var (
-	AdbPayGateHeaderKey    = "ADB-PAYGATE-Secret"
-	AdbPayGateAccessSecret = "4a99amf2c272fb99911e1002bd7d9c387acd705x"
-)
-
 func (s *Server) newAdbOrder(ctx *httpmux.Context) {
 	var (
 		req     = new(types.NewAdbOrderReq)
@@ -537,7 +565,7 @@ func (s *Server) newAdbOrder(ctx *httpmux.Context) {
 	// }
 
 	// check the fixed paygate token
-	if ctx.Req.Header.Get(AdbPayGateHeaderKey) != AdbPayGateAccessSecret {
+	if ctx.Req.Header.Get("ADB-PAYGATE-SECRET") != payGateSecret {
 		err = errors.New("adbpay secret deny")
 		goto END
 	}
@@ -569,7 +597,6 @@ func (s *Server) newAdbOrder(ctx *httpmux.Context) {
 		Callback:        nil,
 		CallbackHistory: []string{},
 		CallbackStatus:  types.AdbOrderCallbackStatusNone, // init status: none
-		InnerCallback:   nil,
 		CreatedAt:       time.Now(),
 		PaidAt:          time.Time{},
 	}); err != nil {
@@ -581,7 +608,7 @@ func (s *Server) newAdbOrder(ctx *httpmux.Context) {
 	if err != nil {
 		// note: after db order created, if we met error while generating qrcode,
 		// we should remove the newly db order and tell outside to retry.
-		err = fmt.Errorf("generate adbpay qrcode error: %v, pls try again later")
+		err = fmt.Errorf("generate adbpay qrcode error: [%v], pls try again later", err)
 		store.DB().RemoveAdbOrder(orderID) // note: remove the newly db adb order
 		goto END
 	}
@@ -610,7 +637,62 @@ END:
 	ctx.JSON(200, resp)
 }
 
-func (s *Server) checkAdbOrder(ctx *httpmux.Context) {
+// adb events
+//
+func (s *Server) receiveAdbEvents(ctx *httpmux.Context) {
+	var (
+		ev = new(adbot.AdbEvent)
+	)
+
+	if err := ctx.Bind(ev); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	if err := ev.Valid(); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	scheduler.PublishAdbDeviceEvent(ev)
+
+	ctx.Status(200)
+}
+
+func (s *Server) watchAdbEvents(ctx *httpmux.Context) {
+	notifier, ok := ctx.Res.(http.CloseNotifier)
+	if !ok {
+		ctx.InternalServerError("not a http close notifier")
+		return
+	}
+
+	flusher, ok := ctx.Res.(http.Flusher)
+	if !ok {
+		ctx.InternalServerError("not a http flusher")
+		return
+	}
+
+	// obtain adb device subscriber
+	sub := scheduler.SubscribeAdbDeviceEvents()
+
+	// must: evict the subscriber befor page exit
+	go func() {
+		<-notifier.CloseNotify()
+		scheduler.EvictAdbDeviceEvents(sub)
+	}()
+
+	// write response header firstly
+	ctx.Res.WriteHeader(200)
+	ctx.Res.Header().Set("Content-Type", "text/event-stream")
+	ctx.Res.Header().Set("Cache-Control", "no-cache")
+	ctx.Res.Write(nil)
+	flusher.Flush()
+
+	// write adb device event to the client with sse format
+	for ev := range sub {
+		ctx.Res.Write(ev.(*adbot.AdbEvent).Format())
+		flusher.Flush()
+	}
 }
 
 // utils

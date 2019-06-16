@@ -32,3 +32,4 @@
     + [查询](/docs/api/setting.md#get)
     + [修改](/docs/api/setting.md#update)
   - [支付宝UserID二维码](/docs/api/other.md#alipay-userid-qrcode)
+  - [下载接入文档](/docs/api/other.md#public-api)

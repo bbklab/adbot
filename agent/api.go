@@ -225,3 +225,18 @@ func (agent *Agent) listAdbDevices(ctx *httpmux.Context) {
 
 	ctx.JSON(200, devices)
 }
+
+func (agent *Agent) checkAdbAlipayOrder(ctx *httpmux.Context) {
+	var (
+		dvcID   = ctx.Query["device_id"]
+		orderID = ctx.Query["order_id"]
+	)
+
+	order, err := extensions.CheckAdbAlipayOrder(dvcID, orderID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.JSON(200, order)
+}

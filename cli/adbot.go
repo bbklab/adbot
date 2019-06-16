@@ -1,13 +1,19 @@
 package cli
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/urfave/cli"
 
 	"github.com/bbklab/adbot/cli/helpers"
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/color"
 	"github.com/bbklab/adbot/pkg/template"
 	"github.com/bbklab/adbot/pkg/utils"
@@ -124,6 +130,7 @@ func AdbDeviceCommand() cli.Command {
 		Name:  "adb-device",
 		Usage: "adb device management",
 		Subcommands: []cli.Command{
+			adbDeviceWatchCommand(),        // watch
 			adbDeviceListCommand(),         // ls
 			adbDeviceInspectCommand(),      // inspect
 			adbDeviceSetBillCommand(),      // set-bill
@@ -133,6 +140,14 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceRevokeAlipayCommand(), // revoke-alipay
 			// adbDeviceRemoveCommand(),    // rm
 		},
+	}
+}
+
+func adbDeviceWatchCommand() cli.Command {
+	return cli.Command{
+		Name:   "watch",
+		Usage:  "watch all of adb devices",
+		Action: watchAdbDevices,
 	}
 }
 
@@ -267,6 +282,70 @@ func inspectAdbNode(c *cli.Context) error {
 
 // adb device
 //
+
+func watchAdbDevices(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		logf = func(content string) {
+			fmt.Fprintln(os.Stdout, content)
+		}
+		errf = func(content string) {
+			fmt.Fprintln(os.Stderr, color.Red(content))
+		}
+	)
+
+	// request on adb events http endpoint
+	stream, err := client.WatchAdbEvents()
+	if err != nil {
+		errf(err.Error())
+		return err
+	}
+	defer stream.Close()
+
+	// stream copy each line
+	var (
+		reader = bufio.NewReader(stream)
+	)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			if err == io.EOF {
+				if len(line) > 0 {
+					goto PROCESS
+				}
+				break
+			}
+			errf(err.Error())
+			return err
+		}
+
+	PROCESS:
+		line = bytes.TrimSuffix(line, []byte("\n")) // trim final '\n'
+		if bytes.HasSuffix(line, []byte("\r")) {    // trim possible final '\r'
+			line = bytes.TrimSuffix(line, []byte("\r"))
+		}
+
+		// only process with sse `data ` prefixed line
+		if !bytes.HasPrefix(line, []byte("data: ")) {
+			continue
+		}
+		line = bytes.TrimPrefix(line, []byte("data: "))
+
+		ev := new(adbot.AdbEvent)
+		if err := json.Unmarshal(line, &ev); err != nil {
+			errf(fmt.Sprintf("malformat sse event: %s", string(line)))
+			continue
+		}
+
+		logf(fmt.Sprintf("%s: %s %s - %s", ev.Time.Format(time.RFC3339), ev.Serial, ev.Type, ev.Message))
+	}
+
+	return nil
+}
 
 func listAdbDevices(c *cli.Context) error {
 	client, err := helpers.NewClient()

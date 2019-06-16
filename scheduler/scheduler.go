@@ -9,9 +9,11 @@ import (
 	maxminddb "github.com/oschwald/maxminddb-golang"
 	"github.com/robfig/cron"
 
+	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/geoip"
 	"github.com/bbklab/adbot/pkg/mole"
 	"github.com/bbklab/adbot/pkg/pubsub"
+	"github.com/bbklab/adbot/pkg/routine"
 )
 
 var (
@@ -21,13 +23,14 @@ var (
 // Scheduler is a runtime cluster scheduler
 type Scheduler struct {
 	master       *mole.Master      // cluster mole master reference
-	routineMgr   *routineMgr       // goroutine registry manager
+	routineMgr   *routine.Registry // goroutine registry manager
 	joinMgr      *joinMgr          // node join notifier manager
 	refreshMgr   *refreshMgr       // node refresh notifier manager
 	arefreshMgr  *refreshMgr       // adb node refresh notifier manager (similar as above but for adbnode)
 	auditLogger  *auditLogger      // audit logger
 	cron         *cron.Cron        // cron
 	adbcbpub     *pubsub.Publisher // adbpay order callback event publisher
+	adbevpub     *pubsub.Publisher // adb device event publisher
 	limitMgr     *rateLimiterMgr   // event rate limiter
 	pubKeyData   string            // public key file path or text (for verify license data)
 	tgbot        *tgbot            // telegram bot
@@ -51,13 +54,14 @@ func Init(m *mole.Master, pubKeyData string) {
 
 	sched = &Scheduler{
 		master:      m,
-		routineMgr:  newRoutineMgr(),
+		routineMgr:  routine.NewRegistry(),
 		joinMgr:     newJoinMgr(),
 		refreshMgr:  newRefreshMgr(),
 		arefreshMgr: newRefreshMgr(),
 		auditLogger: newRollingAuditLogger(),
 		cron:        cron.New(),
 		adbcbpub:    pubsub.NewPublisher(time.Second*5, 1024),
+		adbevpub:    pubsub.NewPublisher(time.Second*5, 1024),
 		limitMgr:    newRateLimiter(),
 		pubKeyData:  pubKeyData,
 		tgbot:       newRuntimeTGBot(),
@@ -95,12 +99,13 @@ func isLeader() bool {
 // Pubsub Adb Order Events
 //
 
-// PublishAdbOrderCallbackEvent  is exported
+// PublishAdbOrderCallbackEvent is exported
 func PublishAdbOrderCallbackEvent(orderID string) {
 	sched.adbcbpub.Publish(orderID)
 }
 
-func subscribeAdbOrderCallbackEvent(orderID string, timeout time.Duration) error {
+// SubscribeAdbOrderCallbackEvent is exported
+func SubscribeAdbOrderCallbackEvent(orderID string, timeout time.Duration) error {
 	sub := sched.adbcbpub.Subcribe(func(v interface{}) bool {
 		if vv, ok := v.(string); ok {
 			return vv == orderID
@@ -117,6 +122,21 @@ func subscribeAdbOrderCallbackEvent(orderID string, timeout time.Duration) error
 	case <-time.After(timeout):
 		return errors.New("timeout while waitting for backend adb callback")
 	}
+}
+
+// PublishAdbDeviceEvent is exported
+func PublishAdbDeviceEvent(ev *adbot.AdbEvent) {
+	sched.adbevpub.Publish(ev)
+}
+
+// SubscribeAdbDeviceEvents is exported
+func SubscribeAdbDeviceEvents() pubsub.Subcriber {
+	return sched.adbevpub.Subcribe(nil) // note: subscribe all adb events
+}
+
+// EvictAdbDeviceEvents is exported
+func EvictAdbDeviceEvents(sub pubsub.Subcriber) {
+	sched.adbevpub.Evict(sub)
 }
 
 // Geo
@@ -142,4 +162,32 @@ func UpdateGeoData() (time.Duration, error) {
 	startAt := time.Now()
 	err := sched.geo.Update()
 	return time.Since(startAt), err
+}
+
+// Routines
+//
+
+// AllGoroutines show all of registered routines
+func AllGoroutines() map[string][]string {
+	return sched.routineMgr.All()
+}
+
+// Goroutines get given type of routines list
+func Goroutines(typ string) []string {
+	return sched.routineMgr.GetType(typ)
+}
+
+// IsRegisteredGoRoutine check if given type/name goroutine registered
+func IsRegisteredGoRoutine(typ, name string) bool {
+	return sched.routineMgr.ExistsRoutine(typ, name)
+}
+
+// RegisterGoroutine register a goroutine name for given type
+func RegisterGoroutine(typ, name string) {
+	sched.routineMgr.AddRoutine(typ, name)
+}
+
+// DeRegisterGoroutine de-register a goroutine name for given type
+func DeRegisterGoroutine(typ, name string) {
+	sched.routineMgr.DelRoutine(typ, name)
 }

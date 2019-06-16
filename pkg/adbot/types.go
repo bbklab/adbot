@@ -3,6 +3,7 @@ package adbot
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,9 +13,10 @@ import (
 	"strings"
 	"time"
 
+	units "github.com/docker/go-units"
+
 	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/pkg/utils"
-	units "github.com/docker/go-units"
 )
 
 func init() {
@@ -23,14 +25,34 @@ func init() {
 
 // nolint
 var (
-	AdbEventDie   = "die"
-	AdbEventAlive = "alive"
+	AdbEventDeviceDie   = "device_die"
+	AdbEventDeviceAlive = "device_alive"
+	AdbEventAlipayOrder = "alipay_order"
 )
 
 // AdbEvent is an adb device event
 type AdbEvent struct {
-	Serial string `json:"serial"`
-	Event  string `json:"event"` // die, alive
+	Serial  string    `json:"serial"`
+	Type    string    `json:"type"` // device_die,device_alive,alipay_order
+	Message string    `json:"message"`
+	Time    time.Time `json:"time"`
+}
+
+// Valid is exported
+func (ev *AdbEvent) Valid() error {
+	if ev.Serial == "" {
+		return errors.New("event device serial required")
+	}
+	if ev.Type == "" {
+		return errors.New("event type required")
+	}
+	return nil
+}
+
+// Format format adb events to SSE text
+func (ev *AdbEvent) Format() []byte {
+	bs, _ := json.Marshal(ev)
+	return []byte(fmt.Sprintf("event: %s\ndata: %s\n\n", ev.Type, string(bs)))
 }
 
 // AndroidSysInfo is exported

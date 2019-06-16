@@ -152,6 +152,26 @@ func DoNodeQueryAdbDevices(id string) (map[string]*adbot.AndroidSysInfo, error) 
 	return dvcsinfo, err
 }
 
+// DoNodeCheckAdbOrder query node's adb device order
+func DoNodeCheckAdbOrder(id, dvcid, orderID string) (*adbot.AlipayOrder, error) {
+	nodeReq, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/api/adbot/alipay_order?device_id=%s&order_id=%s", id, dvcid, orderID), nil)
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	var order *adbot.AlipayOrder
+	err = json.NewDecoder(resp.Body).Decode(&order)
+	return order, err
+}
+
 //
 // Terminal
 //

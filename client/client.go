@@ -197,6 +197,10 @@ func (c *AdbotClient) sendRequest(method, path string, data interface{}, timeout
 
 	}
 
+	if c.url == nil { // prevent panic
+		return nil, fmt.Errorf("no avaliable adbot api endpoints, maybe remote reseted, pls try again later")
+	}
+
 	var host = c.url.Host
 	if c.url.Scheme == schemaUnix {
 		host = "what-ever"
