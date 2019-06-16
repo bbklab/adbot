@@ -173,5 +173,12 @@ Content-Type: application/json
 ### Revoke Alipay
 `DELETE /api/adb_devices/{device_id}/alipay`  -  revoke aliapy account from one adb device
 
+### Verify
+`GET /api/adb_devices/{device_id}/verify`  -  generate qrcode image for manually verify the adb device pay charging
+
+Query Parameters:
+  - **fee**       - fee, by RMB cent
+
+
 ### Remove
 > TODO
