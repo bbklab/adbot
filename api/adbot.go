@@ -320,6 +320,48 @@ func (s *Server) revokeAdbDeviceAlipay(ctx *httpmux.Context) {
 	ctx.Status(200)
 }
 
+func (s *Server) verifyAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid  = ctx.Path["device_id"]
+		fee, _ = strconv.Atoi(ctx.Query["fee"])
+	)
+
+	if fee <= 0 {
+		ctx.BadRequest("bad parameter: fee")
+		return
+	}
+
+	var (
+		feeYuan = fmt.Sprintf("%0.2f", float64(fee)/float64(100))
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	if alipay := dvc.Alipay; alipay == nil {
+		ctx.NotFound("device not binded any alipay account")
+		return
+	}
+
+	orderID := "FOR VERIFY TEST"
+	qrpng, _, err := scheduler.GenAdbpayQrCode(dvc.ID, types.QRCodeTypeAlipay, fee, orderID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	// return the qrcode image
+	ctx.Res.Header().Set("Content-Type", "image/png")
+	ctx.Res.Header().Set("OrderID", orderID)
+	ctx.Res.Header().Set("Fee", strconv.Itoa(fee))
+	ctx.Res.Header().Set("FeeYuan", feeYuan)
+	ctx.Res.WriteHeader(200)
+	ctx.Res.Write(qrpng)
+}
+
 //
 // adb orders
 //

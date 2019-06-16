@@ -78,6 +78,7 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.PUT("/adb_devices/:device_id/weight", s.setAdbDeviceWeight)
 	mux.PUT("/adb_devices/:device_id/alipay", s.bindAdbDeviceAlipay)
 	mux.DELETE("/adb_devices/:device_id/alipay", s.revokeAdbDeviceAlipay)
+	mux.GET("/adb_devices/:device_id/verify", s.verifyAdbDevice) // verify the adb device and test payment charging
 	// mux.DELETE("/adb_devices/:device_id", s.rmAdbDevice) // TODO
 	// adb orders
 	mux.GET("/adb_orders", s.listAdbOrders)

@@ -22,6 +22,7 @@
     + [修改单日最大笔数](/docs/api/adbdevic.md#set-bill)
     + [绑定支付宝账户](/docs/api/adbdevic.md#bind-alipay)
     + [解绑支付宝账户](/docs/api/adbdevic.md#revoke-alipay)
+    + [扫码测试设备收款](/docs/api/adbdevic.md#verify)
     + [删除](/docs/api/adbdevice.md#remove)
   - [订单](/docs/api/adborder.md)
     + [列出/搜索](/docs/api/adborder.md#list)
