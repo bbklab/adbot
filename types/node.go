@@ -47,7 +47,6 @@ type Node struct {
 	JoinAt       time.Time      `json:"join_at" bson:"join_at"`               // the join time of online(connected) node
 	LastActiveAt time.Time      `json:"last_active_at" bson:"last_active_at"` // the latest active node heartbeat(ping) received
 	Latency      time.Duration  `json:"latency" bson:"latency"`               // network latency while master ping node
-	InstJob      string         `json:"inst_job" bson:"inst_job"`             // related node install async job id
 }
 
 // Hidden set the ssh config sensitive fields as invisible

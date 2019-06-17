@@ -17,7 +17,7 @@ func SummaryInfo() (*types.SummaryInfo, error) {
 		Listens:  make([]string, 0, 0),
 	}
 
-	nodes, err := store.DB().ListNodes(nil)
+	nodes, err := store.DB().ListNodes(nil, nil)
 	if err != nil {
 		return nil, err
 	}

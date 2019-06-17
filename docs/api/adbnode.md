@@ -4,6 +4,16 @@
 ### List
 `GET /api/adb_nodes`  -  list current adb nodes
 
+Query Parameters:
+  - **node_id**            - optional: list provided `id` nodes
+  - **status**             - optional: list provided `status` orders
+  - **remote**             - optional: regexp match remote ip
+  - **hostname**           - optional: regexp match hostname
+  - **with_master**        - optional: true|false, with master or not
+  - **labels**             - optional: labels filter, format: key1=val1,key2=val2,key3=val3,...
+  - **offset**             - optional: paging parameter, default 0
+  - **limit**              - optional: paging parameter, default 20
+
 Example Request:
 ```liquid
 GET /api/adb_nodes HTTP/1.1

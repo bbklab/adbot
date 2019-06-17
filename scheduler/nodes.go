@@ -15,9 +15,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/bbklab/adbot/pkg/adbot"
-	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/pkg/mole"
-	"github.com/bbklab/adbot/store"
 	"github.com/bbklab/adbot/types"
 )
 
@@ -325,57 +323,4 @@ func PickupRandomNode() (*mole.ClusterAgent, error) {
 	}
 
 	return healthyNodes[rand.Intn(n)], nil
-}
-
-// FilterNodes pick up current db nodes by filters:
-//  - labels
-//  - online/offline
-//  - with master
-func FilterNodes(filter label.Labels, online *bool, excludeMaster bool) ([]*types.Node, error) {
-	// query all db nodes
-	nodes, err := store.DB().ListNodes(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// filter by labels
-	var idx int
-	for _, node := range nodes {
-		labels := node.Labels
-		if labels.MatchAll(filter) {
-			nodes[idx] = node
-			idx++
-		}
-	}
-	nodes = nodes[:idx]
-
-	// filter by online (ignore flagging nodes)
-	if online != nil {
-		idx = 0                               // reset idx
-		var expected = types.NodeStatusOnline // the caller want online or offline nodes
-		if !*online {
-			expected = types.NodeStatusOffline
-		}
-		for _, node := range nodes {
-			if node.Status == expected {
-				nodes[idx] = node
-				idx++
-			}
-		}
-	}
-	nodes = nodes[:idx]
-
-	// filter by with master
-	if excludeMaster {
-		idx = 0
-		for _, node := range nodes {
-			if info := node.SysInfo; info != nil && !info.WithMaster {
-				nodes[idx] = node
-				idx++
-			}
-		}
-	}
-	nodes = nodes[:idx]
-
-	return nodes, nil
 }

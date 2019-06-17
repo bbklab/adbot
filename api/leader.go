@@ -10,5 +10,5 @@ func (s *Server) queryLeader(ctx *httpmux.Context) {
 		return
 	}
 
-	ctx.Text(410, "TODO: ask ha.Campaigner.CurrentLeader() who is the current leader")
+	ctx.Text(410, "ask ha.Campaigner.CurrentLeader() who is the current leader")
 }

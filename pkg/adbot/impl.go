@@ -407,6 +407,7 @@ func (dvc *AdbDevice) ListSysNotifies() []*AndroidSysNotify {
 	bs, err := dvc.Run("dumpsys", "notification")
 	if err != nil {
 		log.Warnln("ListSysNotifies() error:", err)
+		return nil
 	}
 
 	var (
@@ -416,6 +417,7 @@ func (dvc *AdbDevice) ListSysNotifies() []*AndroidSysNotify {
 	ret, err := parseSectionText(string(bs), rxTitle, keys)
 	if err != nil {
 		log.Warnln("ListSysNotifies() error:", err)
+		return nil
 	}
 
 	notifies := []*AndroidSysNotify{}
