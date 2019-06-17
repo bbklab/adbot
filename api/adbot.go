@@ -62,11 +62,17 @@ func (s *Server) getAdbNode(ctx *httpmux.Context) {
 
 func (s *Server) listAdbDevices(ctx *httpmux.Context) {
 	var (
-		search    = ctx.Query["search"] // id or node_id
-		status    = ctx.Query["status"]
-		overquota = ctx.Query["over_quota"]
-		query     = bson.M{}
+		search      = ctx.Query["search"] // id or node_id
+		status      = ctx.Query["status"]
+		overquota   = ctx.Query["over_quota"]
+		briefAll, _ = strconv.ParseBool(ctx.Query["brief_all"])
+		query       = bson.M{}
 	)
+
+	if briefAll {
+		s.listAllAdbDevicesBrief(ctx)
+		return
+	}
 
 	// build query
 	if search != "" {
@@ -746,4 +752,18 @@ func (s *Server) newOrderID() string {
 	now := time.Now()
 	suffix := utils.RandomString(6)
 	return fmt.Sprintf("%d%d%d%d%d%d-%s", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), suffix)
+}
+
+func (s *Server) listAllAdbDevicesBrief(ctx *httpmux.Context) {
+	dvcs, err := store.DB().ListAdbDevices(nil, nil)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ret := make([]string, 0, 0)
+	for _, dvc := range dvcs {
+		ret = append(ret, dvc.ID)
+	}
+	ctx.JSON(200, ret)
 }

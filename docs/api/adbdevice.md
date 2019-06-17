@@ -5,6 +5,7 @@
 `GET /api/adb_devices`  -  list current adb devices
   
 Query Parameters:
+  - **brief_all**    - optional: true|false, only list brief `id` for all of adb devices. note: **if true, all of other parameters will be ignored**
   - **search**       - optional: search provided adbnode id or adb device id
   - **status**       - optional: online,offline
   - **over_quota**   - optional: true,false
