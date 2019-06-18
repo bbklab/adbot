@@ -23,9 +23,6 @@ import (
 )
 
 var (
-	// max time for waitting backend payway's callback
-	subTimeout = time.Minute * 5
-
 	// failure retry interval for sending our callback
 	sendFailureRetry = []time.Duration{
 		time.Second * 10,  // 10s
@@ -45,7 +42,7 @@ func SubscribeAdbOrderAndSendCallback(orderID string) {
 	defer DeRegisterGoroutine("adb_order_callback", orderID)
 
 	// wait adb order callback event
-	err := SubscribeAdbOrderCallbackEvent(orderID, subTimeout)
+	err := SubscribeAdbOrderCallbackEvent(orderID, types.AdbOrderTimeout)
 	if err != nil {
 		MemoAdbOrderStatus(orderID, types.AdbOrderStatusTimeout)
 		return
@@ -488,8 +485,8 @@ func checkDevicePendingOrders(dvcid string) {
 	RegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
 	defer DeRegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
 
-	// query device pending orders within 5m
-	query := bson.M{"device_id": dvcid, "status": types.AdbOrderStatusPending, "created_at": bson.M{"$gt": time.Now().Add(-time.Minute * 5)}}
+	// query device pending orders
+	query := bson.M{"device_id": dvcid, "status": types.AdbOrderStatusPending}
 	orders, err := store.DB().ListAdbOrders(nil, query)
 	if err != nil {
 		log.Errorf("query pending adb orders for device %s error: %v", dvcid, err)

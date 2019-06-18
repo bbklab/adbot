@@ -174,6 +174,7 @@ ELECT:
 				log.Printf("master is working on some initializations, this may take a while ...")
 				m.initDBNodesStatus()            // mark all db nodes as `offline` except the `deleting` ones
 				m.initDBAdbDevicesStatus()       // mark all db adb devices as `offline`
+				m.initDBAdbOrderStatus()         // mark all of (created_at <= now - 5m) + (status = pending) adb order as `timeout`
 				m.initDBAdbOrderCallbackStatus() // mark all of ongoing adb order callback as `aborted`
 				m.apiserver.SetLeader(true)      // then Api -> 200, agents will join on me
 				scheduler.SetLeader(true)        // then scheduler knows the current role, it's background loops(guarders) will be enabled
@@ -229,6 +230,19 @@ func (m *Master) initDBAdbDevicesStatus() {
 	}
 	for _, dvc := range dvcs {
 		scheduler.MemoAdbDeviceStatus(dvc.ID, types.AdbDeviceStatusOffline, "waitting for the first adb device status collection")
+	}
+}
+
+// initDBAdbOrderStatus mark all of (created_at <= now - 5m) + (status = pending) adb order status as `timeout`
+func (m *Master) initDBAdbOrderStatus() {
+	query := bson.M{"status": types.AdbOrderStatusPending, "created_at": bson.M{"$lt": time.Now().Add(-types.AdbOrderTimeout)}}
+	orders, err := store.DB().ListAdbOrders(nil, query)
+	if err != nil {
+		log.Fatalln("db ListAdbOrders() timeout error:", err)
+	}
+
+	for _, order := range orders {
+		scheduler.MemoAdbOrderStatus(order.ID, types.AdbOrderStatusTimeout)
 	}
 }
 

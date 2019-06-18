@@ -84,6 +84,11 @@ type WxpayAccount struct {
 
 // nolint
 var (
+	AdbOrderTimeout = time.Minute * 5
+)
+
+// nolint
+var (
 	AdbOrderStatusPending = "pending" // init status
 	AdbOrderStatusPaid    = "paid"    // paid
 	AdbOrderStatusTimeout = "timeout" // timeout

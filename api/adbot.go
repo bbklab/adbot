@@ -353,14 +353,18 @@ func (s *Server) revokeAdbDeviceAlipay(ctx *httpmux.Context) {
 		return
 	}
 
-	// TODO
 	// firstly we should ensure this adb device is disabled
-	//
+	if dvc.Weight > 0 {
+		ctx.Forbidden("pls first disable this device by set weight = 0")
+		return
+	}
 
-	// TODO
-	//
 	// must ensure no adbpay orders related to this device unfinished ...
-	//
+	query := bson.M{"status": types.AdbOrderStatusPending}
+	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
+		ctx.Locked(fmt.Sprintf("locked by %d related pending orders", len(orders)))
+		return
+	}
 
 	err = scheduler.MemoAdbDeviceAlipay(dvc.ID, nil)
 	if err != nil {
