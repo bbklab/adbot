@@ -87,7 +87,7 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	// adb public api
 	mux.GET("/adb_public_api", s.getAdbPublicAPIDocs)
 	// adb paygate
-	//  - called by out side pay system, only autheticated by secret header (TODO more authetications)
+	//  - called by out side pay system, only autheticated by secret header
 	mux.POST("/adb_paygate/new", s.newAdbOrder)
 	// adb events
 	mux.POST("/adb_events", s.receiveAdbEvents) // public, used by adbnode

@@ -36,8 +36,8 @@ type Store interface {
 	UpdateNode(id string, update interface{}) error
 	RemoveNode(id string) error
 	GetNode(id string) (*types.Node, error)
-	ListNodes(pager types.Pager) ([]*types.Node, error)
-	CountNodes() int
+	ListNodes(pager types.Pager, filter interface{}) ([]*types.Node, error)
+	CountNodes(filter interface{}) int
 
 	// adb node
 	AddAdbDevice(dvc *types.AdbDevice) error

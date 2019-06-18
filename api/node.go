@@ -8,52 +8,55 @@ import (
 	"strconv"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/bbklab/adbot/pkg/httpmux"
-	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/pkg/mole"
 	"github.com/bbklab/adbot/scheduler"
 	"github.com/bbklab/adbot/store"
 	"github.com/bbklab/adbot/types"
 )
 
-// TODO
 func (s *Server) listNodes(ctx *httpmux.Context) {
-	// obtain label filter
 	var (
-		lbsQuery  = ctx.Query["labels"] // key1=val1,key2=val2,key3=val3...
-		lbsFilter = label.New(nil)
+		nodeID     = ctx.Query["node_id"]
+		status     = ctx.Query["status"]
+		remote     = ctx.Query["remote"] // remote ip search
+		hostname   = ctx.Query["hostname"]
+		withMaster = ctx.Query["with_master"]
+		labels     = ctx.Query["labels"] // key1=val1,key2=val2,key3=val3...
+		query      = bson.M{}
 	)
-	if lbsQuery != "" {
-		for _, pair := range strings.Split(lbsQuery, ",") {
-			if strings.TrimSpace(pair) == "" {
-				continue
-			}
 
+	// build query
+	if nodeID != "" {
+		query["id"] = nodeID
+	}
+	if status != "" {
+		query["status"] = status
+	}
+	if remote != "" {
+		query["remote_addr"] = bson.M{"$regex": bson.RegEx{Pattern: remote}}
+	}
+	if hostname != "" {
+		query["sysinfo.hostname"] = bson.M{"$regex": bson.RegEx{Pattern: hostname}}
+	}
+	if withMaster != "" {
+		withMasterV, _ := strconv.ParseBool(withMaster)
+		query["sysinfo.with_master"] = withMasterV
+	}
+	if labels != "" {
+		pairs := strings.Split(labels, ",")
+		for _, pair := range pairs {
 			kv := strings.SplitN(pair, "=", 2)
-			if len(kv) != 2 {
-				ctx.BadRequest(fmt.Sprintf("[%s] is not valid label kv format", pair))
-				return
+			if len(kv) == 2 {
+				query[fmt.Sprintf("labels.%s", kv[0])] = kv[1]
 			}
-
-			key, val := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
-			lbsFilter.Set(key, val)
 		}
 	}
 
-	// obtain online filter
-	//   - empty      : query all
-	//   - true/false : query specified online/offline nodes
-	var (
-		online     = ctx.Query["online"]
-		onlineFlag *bool // query all
-	)
-	if online != "" {
-		flag, _ := strconv.ParseBool(online)
-		onlineFlag = &flag
-	}
-
 	// filter nodes & sort
-	nodes, err := scheduler.FilterNodes(lbsFilter, onlineFlag, false)
+	nodes, err := store.DB().ListNodes(getPager(ctx), query)
 	if err != nil {
 		ctx.AutoError(err)
 		return
@@ -64,7 +67,8 @@ func (s *Server) listNodes(ctx *httpmux.Context) {
 		wraps[idx] = s.wrapNode(node)
 	}
 
-	ctx.Res.Header().Set("Total-Records", strconv.Itoa(len(wraps)))
+	n := store.DB().CountNodes(query)
+	ctx.Res.Header().Set("Total-Records", strconv.Itoa(n))
 	ctx.JSON(200, wraps)
 }
 

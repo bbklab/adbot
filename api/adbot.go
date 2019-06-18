@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -27,7 +28,45 @@ import (
 //
 
 func (s *Server) listAdbNodes(ctx *httpmux.Context) {
-	nodes, err := scheduler.FilterNodes(nil, nil, false)
+	var (
+		nodeID     = ctx.Query["node_id"]
+		status     = ctx.Query["status"]
+		remote     = ctx.Query["remote"] // remote ip search
+		hostname   = ctx.Query["hostname"]
+		withMaster = ctx.Query["with_master"]
+		labels     = ctx.Query["labels"] // key1=val1,key2=val2,key3=val3...
+		query      = bson.M{}
+	)
+
+	// build query
+	if nodeID != "" {
+		query["id"] = nodeID
+	}
+	if status != "" {
+		query["status"] = status
+	}
+	if remote != "" {
+		query["remote_addr"] = bson.M{"$regex": bson.RegEx{Pattern: remote}}
+	}
+	if hostname != "" {
+		query["sysinfo.hostname"] = bson.M{"$regex": bson.RegEx{Pattern: hostname}}
+	}
+	if withMaster != "" {
+		withMasterV, _ := strconv.ParseBool(withMaster)
+		query["sysinfo.with_master"] = withMasterV
+	}
+	if labels != "" {
+		pairs := strings.Split(labels, ",")
+		for _, pair := range pairs {
+			kv := strings.SplitN(pair, "=", 2)
+			if len(kv) == 2 {
+				query[fmt.Sprintf("labels.%s", kv[0])] = kv[1]
+			}
+		}
+	}
+
+	// filter nodes & sort
+	nodes, err := store.DB().ListNodes(getPager(ctx), query)
 	if err != nil {
 		ctx.AutoError(err)
 		return
@@ -38,7 +77,8 @@ func (s *Server) listAdbNodes(ctx *httpmux.Context) {
 		wraps[idx] = s.wrapAdbNode(node)
 	}
 
-	ctx.Res.Header().Set("Total-Records", strconv.Itoa(len(wraps)))
+	n := store.DB().CountNodes(query)
+	ctx.Res.Header().Set("Total-Records", strconv.Itoa(n))
 	ctx.JSON(200, wraps)
 }
 

@@ -33,13 +33,13 @@ func (s *MgoStore) GetNode(id string) (*types.Node, error) {
 }
 
 // ListNodes is exported
-func (s *MgoStore) ListNodes(pager types.Pager) ([]*types.Node, error) {
+func (s *MgoStore) ListNodes(pager types.Pager, filter interface{}) ([]*types.Node, error) {
 	ret := []*types.Node{}
-	err := s.all(cNode, nil, pager, &ret, "-join_at")
+	err := s.all(cNode, filter, pager, &ret, "-join_at")
 	return ret, err
 }
 
 // CountNodes is exported
-func (s *MgoStore) CountNodes() int {
-	return s.count(cNode, nil)
+func (s *MgoStore) CountNodes(filter interface{}) int {
+	return s.count(cNode, filter)
 }

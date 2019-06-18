@@ -210,7 +210,7 @@ func (m *Master) initDBGlobalSettings() {
 
 // initDBNodesStatus mark all of db nodes as `offline` except deleting nodes
 func (m *Master) initDBNodesStatus() {
-	nodes, err := store.DB().ListNodes(nil)
+	nodes, err := store.DB().ListNodes(nil, nil)
 	if err != nil {
 		log.Fatalln("db ListNodes() error:", err)
 	}

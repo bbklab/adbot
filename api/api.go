@@ -59,7 +59,6 @@ func (s *Server) Run() error {
 	mux := httpmux.New(APIPREFIX)
 	s.mux = mux // save mux reference
 
-	// TODO
 	// enable this midware after implement a real HA Campaigner
 	// note: we must set this midware at first, as we expect to redirect all traffics
 	// to current leader if we stand by, so all the rest midwares and handlers won't take effect
