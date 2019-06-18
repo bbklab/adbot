@@ -794,7 +794,7 @@ func (s *Server) wrapAdbOrder(o *types.AdbOrder) *types.AdbOrderWrapper {
 
 func (s *Server) newOrderID() string {
 	now := time.Now()
-	suffix := utils.RandomString(6)
+	suffix := strings.ToUpper(utils.RandomString(4))
 	return fmt.Sprintf("%d%d%d%d%d%d-%s", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), suffix)
 }
 

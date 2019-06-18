@@ -168,19 +168,26 @@ func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
 
 	for range ticker.C {
 		ids, _ := am.ah.ListAdbDevices()
+
+		var wg sync.WaitGroup
+		wg.Add(len(ids))
 		for _, id := range ids {
-			dvc := am.getDevice(id)
+			go func(id string) {
+				defer wg.Done()
 
-			if !dvc.IsAwake() {
-				dvc.AwakenScreen()
-				dvc.SwipeUpUnlock()
-				dvc.GotoHome()
-			}
+				dvc := am.getDevice(id)
+				if !dvc.IsAwake() {
+					dvc.AwakenScreen()
+					dvc.SwipeUpUnlock()
+					dvc.GotoHome()
+				}
 
-			if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
-				dvc.StartAliPay()
-			}
+				if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
+					dvc.StartAliPay()
+				}
+			}(id)
 		}
+		wg.Wait()
 	}
 }
 
