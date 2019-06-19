@@ -87,17 +87,12 @@ func (a *Adb) NewDevice(serial string) AdbDeviceHandler {
 
 // AdbDevice is an AdbDeviceHandler implemention
 type AdbDevice struct {
-	h        *goadb.Device
-	cmdmutex sync.Mutex // synchronized Run(cmd, args)
+	h *goadb.Device
+	l sync.Mutex // synchronized Adb Ops including any combined or single ops
 
-	sysNotifyClearButtonXY          [2]int // 下拉 -> 清除所有通知按钮 XY
-	alipayChargingButtonXY          [2]int // 首页 -> 收钱 XY
-	alipayChargingAmountXY          [2]int // 首页 -> 收钱 -> 设置金额 XY
-	alipayChargingQrCodeAddBeiZhuXY [2]int // 首页 -> 收钱 -> 设置金额 -> 添加收款理由 XY
-	alipayChargingQrCodeNextBtnXY   [2]int // 首页 -> 收钱 -> 设置金额 -> 确定 XY
-	alipayOrderButtonXY             [2]int // 我的 -> 账单 XY
-	alipayOrderSearchButtonXY       [2]int // 我的 -> 账单 -> 搜索 XY
-	alipayOrderSearchEmitXY         [2]int // 我的 -> 账单 -> 搜索 -> 搜索 XY
+	// alipay button XY
+	alipayBillListSearchButton [2]int // 我的->账单->搜索
+	alipayBillSearchEmitButton [2]int // 我的->账单->搜索->搜索
 }
 
 // Serial implement AdbDeviceHandler
@@ -113,6 +108,15 @@ func (dvc *AdbDevice) Online() bool {
 		return false
 	}
 	return state == goadb.StateOnline
+}
+
+// Run implement AdbDeviceHandler
+func (dvc *AdbDevice) Run(cmd string, args ...string) (string, error) {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+
+	log.Debugln("Run()", cmd, args)
+	return dvc.h.RunCommand(cmd, args...)
 }
 
 // SysInfo implement AdbDeviceHandler
@@ -141,14 +145,6 @@ func (dvc *AdbDevice) BatteryInfo() (*AndroidBatteryInfo, error) {
 		return nil, err
 	}
 	return parseAndroidBatteryInfo(string(bs)), nil
-}
-
-// Run implement AdbDeviceHandler
-func (dvc *AdbDevice) Run(cmd string, args ...string) (string, error) {
-	dvc.cmdmutex.Lock()
-	defer dvc.cmdmutex.Unlock()
-	log.Debugln("Run()", cmd, args)
-	return dvc.h.RunCommand(cmd, args...)
 }
 
 // IsAwake implement AdbDeviceHandler
@@ -275,44 +271,43 @@ func (dvc *AdbDevice) DumpCurrentUI() ([]*AndroidUINode, error) {
 	return parseAndroidUINodes(xmlbs)
 }
 
-// FindUINode implement AdbDeviceHandler
-func (dvc *AdbDevice) FindUINode(nodes []*AndroidUINode, resourceid, resourcetext string) *AndroidUINode {
-	for _, node := range nodes {
-		if node.ResourceID == resourceid {
-			if resourcetext == "" {
-				return node
-			}
-			if node.Text == resourcetext {
-				return node
-			}
-		}
-	}
-	return nil
-}
-
 var (
 	errUINodeNotFound = errors.New("can't find the target UI node")
 )
 
-// FindUINodeAndTapMiddleXY implement AdbDeviceHandler
-func (dvc *AdbDevice) FindUINodeAndTapMiddleXY(resourceid, resourcetext string) (int, int, error) {
+// FindUINodeAndClick implement AdbDeviceHandler
+func (dvc *AdbDevice) FindUINodeAndClick(resourceid, resourcetext string) (int, int, error) {
 	nodes, err := dvc.DumpCurrentUI()
 	if err != nil {
-		log.Errorln("FindUINodeAndTapMiddleXY().DumpCurrentUI() error:", err)
+		log.Errorln("FindUINodeAndClick().DumpCurrentUI() error:", err)
 		return -1, -1, err
 	}
 
-	var targetNode = dvc.FindUINode(nodes, resourceid, resourcetext)
+	var targetNode = dvc.findUINode(nodes, resourceid, resourcetext)
 	if targetNode == nil {
 		return -1, -1, errUINodeNotFound
 	}
 
 	x, y, err := targetNode.MiddleXY()
 	if err != nil {
-		return -1, -1, fmt.Errorf("FindUINodeAndTapMiddleXY() can't find the target UI node MiddleXY(): %v", err)
+		return -1, -1, fmt.Errorf("FindUINodeAndClick() can't find the target UI node MiddleXY(): %v", err)
 	}
 
 	return x, y, dvc.Click(x, y)
+}
+
+func (dvc *AdbDevice) findUINode(nodes []*AndroidUINode, resourceid, resourcetext string) *AndroidUINode {
+	for _, node := range nodes {
+		if node.ResourceID == resourceid {
+			if resourcetext == "" {
+				return node
+			}
+			if strings.Contains(node.Text, resourcetext) {
+				return node
+			}
+		}
+	}
+	return nil
 }
 
 // TailSysLogs implement AdbDeviceHandler
@@ -437,28 +432,21 @@ func (dvc *AdbDevice) ClearSysNotifies() error {
 	// swipe down list notifies
 	dvc.SwipeDownShowNotify()
 
-	// if we have already knows the clear button location, directly click it
-	if x, y := dvc.sysNotifyClearButtonXY[0], dvc.sysNotifyClearButtonXY[1]; x > 0 && y > 0 {
-		return dvc.Click(x, y)
-	}
-
 	// find the UI node and click it
 	var (
 		resourceid   = "com.android.systemui:id/clear_all_button"
 		resourcetext = ""
 	)
-	x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
+	_, _, err := dvc.FindUINodeAndClick(resourceid, resourcetext)
 	if err != nil {
 		if err == errUINodeNotFound {
 			log.Warnln("ClearSysNotifies() no system notifies need to be cleaned")
 			return nil
 		}
-		log.Errorln("ClearSysNotifies().FindUINodeAndTapMiddleXY() error:", err)
+		log.Errorln("ClearSysNotifies().FindUINodeAndClick() error:", err)
 		return err
 	}
 
-	// save the clear button XY
-	dvc.sysNotifyClearButtonXY = [2]int{x, y}
 	return nil
 }
 
@@ -508,6 +496,7 @@ func (dvc *AdbDevice) WatchSysNotifies() (<-chan *AndroidSysNotify, chan struct{
 						n++
 					}
 				}
+
 				// FIXME clean while idle
 				// if n > 0 {
 				// dvc.ClearSysNotifies() // clear sys notifies
@@ -531,278 +520,104 @@ func (dvc *AdbDevice) WatchSysNotifies() (<-chan *AndroidSysNotify, chan struct{
 
 // StartAliPay implement AdbDeviceHandler
 func (dvc *AdbDevice) StartAliPay() error {
-	_, err := dvc.Run("am", "start", "com.eg.android.AlipayGphone/.AlipayLogin")
-	if err != nil {
-		log.Errorln("StartAliPay() am.start error:", err)
-		return err
-	}
-	return nil
-}
-
-// GotoAlipayTabHome implement AdbDeviceHandler
-// note: depends on StartAliPay()
-func (dvc *AdbDevice) GotoAlipayTabHome() error {
-	var (
-		resourceid   = "com.alipay.android.phone.openplatform:id/tab_description"
-		resourcetext = "首页"
-		retryN       int
-	)
-
-RETRY:
-	retryN++
-
-	_, _, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-	if err != nil {
-		if err == errUINodeNotFound {
-			if retryN >= 7 {
-				log.Errorln("GotoAlipayTabHome() can't find the alipay wealth.home button")
-				return errors.New("GotoAlipayTabHome() can't find the alipay wealth.home button")
-			}
-			log.Warnln("GotoAlipayTabHome() goback one step and retry to find the alipay wealth.home button ...")
-			dvc.GoBack()
-			goto RETRY
-		} else {
-			log.Errorln("GotoAlipayTabHome().FindUINodeAndTapMiddleXY error:", err)
-			return fmt.Errorf("GotoAlipayTabHome().FindUINodeAndTapMiddleXY error: %v", err)
+	var err error
+	for i := 1; i <= 5; i++ {
+		if dvc.isAlipayActive() {
+			return nil
 		}
-	}
-
-	// TODO save the X,Y
-	return nil
-}
-
-// GotoAlipayCharging implement AdbDeviceHandler
-// note: depends on GotoAlipayTabHome()
-func (dvc *AdbDevice) GotoAlipayCharging() error {
-	// we knows it, directly click it
-	if x, y := dvc.alipayChargingButtonXY[0], dvc.alipayChargingButtonXY[1]; x > 0 && y > 0 {
-		return dvc.Click(x, y)
-	}
-
-	// find the UI node and click it
-	var (
-		resourceid   = "com.alipay.android.phone.openplatform:id/collect_tv"
-		resourcetext = "收钱"
-	)
-	x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-	if err != nil {
-		log.Errorln("GotoAlipayCharging().FindUINodeAndTapMiddleXY() error:", err)
-		return err
-	}
-
-	// save the order button XY
-	dvc.alipayChargingButtonXY = [2]int{x, y}
-	return nil
-}
-
-// GotoAlipayChargingAmount implement AdbDeviceHandler
-// note: depends on GotoAlipayCharging()
-func (dvc *AdbDevice) GotoAlipayChargingAmount() error {
-	// we knows it, directly click it
-	if x, y := dvc.alipayChargingAmountXY[0], dvc.alipayChargingAmountXY[1]; x > 0 && y > 0 {
-		return dvc.Click(x, y)
-	}
-
-	// find the UI node and click it
-	var (
-		resourceid   = "com.alipay.mobile.payee:id/payee_QRCodePayModifyMoney"
-		resourcetext = "设置金额"
-	)
-	x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-	if err != nil {
-		log.Errorln("GotoAlipayChargingAmount().FindUINodeAndTapMiddleXY() error:", err)
-		return err
-	}
-
-	// save the order button XY
-	dvc.alipayChargingAmountXY = [2]int{x, y}
-	return nil
-}
-
-// AlipayGenerateChargingAmountQrCode implement AdbDeviceHandler
-func (dvc *AdbDevice) AlipayGenerateChargingAmountQrCode(orderID string, fee int) (*AlipayChargingQrCode, error) {
-	// input the fee
-	_, err := dvc.Run("input", "text", fmt.Sprintf("%0.2f", float64(fee)/float64(100)))
-	if err != nil {
-		return nil, fmt.Errorf("AlipayGenerateChargingAmountQrCode() input text fee amount: %v", err)
-	}
-
-	// click 添加收款理由
-	if x, y := dvc.alipayChargingQrCodeAddBeiZhuXY[0], dvc.alipayChargingQrCodeAddBeiZhuXY[1]; x > 0 && y > 0 {
-		err = dvc.Click(x, y)
+		_, err = dvc.Run("am", "start", "com.eg.android.AlipayGphone/.AlipayLogin")
 		if err != nil {
-			log.Errorln("AlipayGenerateChargingAmountQrCode() directly click1 error:", err)
-			return nil, err
+			log.Warnf("StartAliPay() %d am.start error: %v", i, err)
 		}
-	} else {
-		// find the UI node and click it
-		resourceid := "com.alipay.mobile.payee:id/payee_QRAddBeiZhuLink"
-		resourcetext := "添加收款理由"
-		x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-		if err != nil {
-			log.Errorln("AlipayGenerateChargingAmountQrCode().FindUINodeAndTapMiddleXY().1 error:", err)
-			return nil, err
-		}
-		// save the button XY
-		dvc.alipayChargingQrCodeAddBeiZhuXY = [2]int{x, y}
+		time.Sleep(time.Second)
 	}
-
-	// input the order id
-	_, err = dvc.Run("input", "text", orderID)
-	if err != nil {
-		return nil, fmt.Errorf("AlipayGenerateChargingAmountQrCode() input text orderID: %v", err)
-	}
-
-	// click 确定
-	if x, y := dvc.alipayChargingQrCodeNextBtnXY[0], dvc.alipayChargingQrCodeNextBtnXY[1]; x > 0 && y > 0 {
-		err = dvc.Click(x, y)
-		if err != nil {
-			log.Errorln("AlipayGenerateChargingAmountQrCode() directly click2 error:", err)
-			return nil, err
-		}
-	} else {
-		resourceid := "com.alipay.mobile.payee:id/payee_NextBtn"
-		resourcetext := "确定"
-		x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-		if err != nil {
-			log.Errorln("AlipayGenerateChargingAmountQrCode().FindUINodeAndTapMiddleXY().2 error:", err)
-			return nil, err
-		}
-		// save the button XY
-		dvc.alipayChargingQrCodeNextBtnXY = [2]int{x, y}
-	}
-
-	// screen cap
-	imgdata, err := dvc.ScreenCap()
-	if err != nil {
-		log.Errorln("AlipayGenerateChargingAmountQrCode().ScreenCap() error:", err)
-		return nil, err
-	}
-
-	return &AlipayChargingQrCode{Image: imgdata}, nil
-}
-
-// GotoAlipayTabProfile implement AdbDeviceHandler
-// note: depends on StartAliPay()
-func (dvc *AdbDevice) GotoAlipayTabProfile() error {
-	var (
-		resourceid   = "com.alipay.android.phone.wealth.home:id/tab_description"
-		resourcetext = "我的"
-		retryN       int
-	)
-
-RETRY:
-	retryN++
-
-	// ensure alipay is the top activity
-	if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
-		dvc.StartAliPay()
-	}
-
-	_, _, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-	if err != nil {
-		if err == errUINodeNotFound {
-			if retryN >= 5 {
-				log.Errorln("GotoAlipayTabProfile() can't find the alipay wealth.home button")
-				return errors.New("GotoAlipayTabProfile() can't find the alipay wealth.home button")
-			}
-			log.Warnln("GotoAlipayTabProfile() goback one step and retry to find the alipay wealth.home button ...")
-			dvc.GoBack()
-			goto RETRY
-		} else {
-			log.Errorln("GotoAlipayTabProfile().FindUINodeAndTapMiddleXY error:", err)
-			return fmt.Errorf("GotoAlipayTabProfile().FindUINodeAndTapMiddleXY error: %v", err)
-		}
-	}
-
-	return nil
-}
-
-// GotoAlipayListOrder implement AdbDeviceHandler
-// note: depends on GotoAlipayTabProfile()
-func (dvc *AdbDevice) GotoAlipayListOrder() error {
-	// we knows it, directly click it
-	if x, y := dvc.alipayOrderButtonXY[0], dvc.alipayOrderButtonXY[1]; x > 0 && y > 0 {
-		return dvc.Click(x, y)
-	}
-
-	// find the UI node and click it
-	var (
-		resourceid   = "com.alipay.mobile.antui:id/item_left_text"
-		resourcetext = "账单"
-	)
-	x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-	if err != nil {
-		log.Errorln("GotoAlipayListOrder().FindUINodeAndTapMiddleXY() error:", err)
-		return err
-	}
-
-	// save the order button XY
-	dvc.alipayOrderButtonXY = [2]int{x, y}
-	return nil
+	return err
 }
 
 // AlipaySearchOrder implement AdbDeviceHandler
-// note: depends on GotoAlipayListOrder()
+// 我的 -> 账单 -> 搜索 -> 搜索
 func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 	if orderID == "" {
 		return nil, errors.New("AlipaySearchOrder() order id required")
 	}
 
-	// ensure alipay order list is the top activity  (分页: 我的 -> 账单)
-	if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone/com.alipay.mobile.bill.list.ui.BillMainListActivity") {
-		dvc.GotoAlipayTabProfile()
-		dvc.GotoAlipayListOrder()
-	}
-
-	// we knows it, directly click it
-	if x, y := dvc.alipayOrderSearchButtonXY[0], dvc.alipayOrderSearchButtonXY[1]; x > 0 && y > 0 {
-		err := dvc.Click(x, y)
+	// ensure current top activity is alipay bill list page
+	if !dvc.isAlipayBillListActive() {
+		err := dvc.gotoAlipayListOrder()
 		if err != nil {
-			log.Errorln("AlipaySearchOrder() directly click1 error:", err)
 			return nil, err
 		}
-	} else { // find the UI node and click it
-		var (
-			resourceid   = "com.alipay.mobile.bill.list:id/search_btn"
-			resourcetext = "搜索"
-		)
-		x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-		if err != nil {
-			log.Errorln("AlipaySearchOrder().FindUINodeAndTapMiddleXY().1 error:", err)
-			return nil, err
-		}
-		// save the search order button XY
-		dvc.alipayOrderSearchButtonXY = [2]int{x, y}
 	}
 
-	// goback once afterwards to the alipay Order List Page
-	defer dvc.GoBack()
+	var (
+		resourceid   string
+		resourcetext string
+		newX, newY   int
+		err          error
+	)
 
-	// input the order id
+	// 点击账单列表页的'搜索'
+	// if we know the button XY, directly click it
+	if currX, currY := dvc.alipayBillListSearchButton[0], dvc.alipayBillListSearchButton[1]; currX > 0 && currY > 0 {
+		dvc.Click(currX, currY)
+		// ensure we got the right activity, otherwise re-caculate the button XY and click it
+		err = dvc.waitAlipayBillSearchActive(5, time.Second)
+		if err != nil {
+			log.Warnln("AlipaySearchOrder().DirectClick() on `Bill-List-Search-Button` maybe outdated, need fix the button XY")
+		} else {
+			goto EMITSEARCH
+		}
+	}
+
+	// caculate the button XY and click it
+	resourceid = "com.alipay.mobile.bill.list:id/search_btn"
+	resourcetext = "搜索"
+	newX, newY, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
+	if err != nil {
+		log.Errorln("AlipaySearchOrder().FindUINodeAndClick() on `Bill-List-Search-Button` error:", err)
+		return nil, err
+	}
+	// ensure we got the right activity
+	err = dvc.waitAlipayBillSearchActive(5, time.Second)
+	if err != nil {
+		log.Errorln("AlipaySearchOrder().waitAlipayBillSearchActive() error:", err)
+		return nil, err
+	}
+	// now we got the right activity
+	if newX > 0 && newY > 0 {
+		dvc.alipayBillListSearchButton = [2]int{newX, newY} // renew the new button XY
+		newX, newY = 0, 0                                   // clear the value
+	}
+
+EMITSEARCH:
+
+	// goback once afterwards to the alipay order list page
+	defer func() {
+		dvc.GoBack()
+		dvc.waitAlipayBillListActive(5, time.Second)
+	}()
+
+	// 输入订单号
 	if _, err := dvc.Run("input", "text", orderID); err != nil {
 		return nil, fmt.Errorf("AlipaySearchOrder() input text orderID error: %v", err)
 	}
 
-	// we known it, directly click it
-	if x, y := dvc.alipayOrderSearchEmitXY[0], dvc.alipayOrderSearchEmitXY[1]; x > 0 && y > 0 {
-		err := dvc.Click(x, y)
+	// 点击账单搜索页的'搜索' 进行提交
+	// if we know the button XY, directly click it
+	if currX, currY := dvc.alipayBillSearchEmitButton[0], dvc.alipayBillSearchEmitButton[1]; currX > 0 && currY > 0 {
+		dvc.Click(currX, currY)
+	} else { // caculate the button XY and click it
+		resourceid = ""
+		resourcetext = "搜索"
+		newX, newY, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
 		if err != nil {
-			log.Errorln("AlipaySearchOrder() directly click2 error:", err)
+			log.Errorln("AlipaySearchOrder().FindUINodeAndClick() on `Bill-Search-Emit-Button` error:", err)
 			return nil, err
 		}
-	} else { // find the emit button and go search it!
-		var (
-			resourceid   = ""
-			resourcetext = "搜索"
-		)
-		x, y, err := dvc.FindUINodeAndTapMiddleXY(resourceid, resourcetext)
-		if err != nil {
-			log.Errorln("AlipaySearchOrder().FindUINodeAndTapMiddleXY().2 error:", err)
-			return nil, err
+		if newX > 0 && newY > 0 {
+			dvc.alipayBillSearchEmitButton = [2]int{newX, newY} // renew the new button XY
+			newX, newY = 0, 0                                   // clear the value
 		}
-		// save the search order button XY
-		dvc.alipayOrderSearchEmitXY = [2]int{x, y}
 	}
 
 	// parse the search result page
@@ -811,10 +626,9 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 		log.Errorln("AlipaySearchOrder().DumpCurrentUI() on search result page error:", err)
 		return nil, err
 	}
-
 	// retry max 10 times if loading
 	for i := 1; i <= 10; i++ {
-		loadingNode := dvc.FindUINode(nodes, "android:id/progress", "") // 加载中
+		loadingNode := dvc.findUINode(nodes, "android:id/progress", "") // 加载中
 		if loadingNode != nil {
 			time.Sleep(time.Second)
 			nodes, _ = dvc.DumpCurrentUI()
@@ -823,21 +637,19 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 		break
 	}
 
-	// assume alipay loaded the search result
-	var (
-		resourceid   = "com.alipay.mobile.antui:id/tips"
-		resourcetext = "没有找到近1年的相关记录"
-	)
-	tipNode := dvc.FindUINode(nodes, resourceid, resourcetext)
+	// we assume alipay loaded the search result
+	resourceid = "com.alipay.mobile.antui:id/tips"
+	resourcetext = "没有找到"
+	tipNode := dvc.findUINode(nodes, resourceid, resourcetext)
 	if tipNode != nil { // not found this order
 		return nil, errors.New("no such order")
 	}
 
 	var (
-		billNameNode   = dvc.FindUINode(nodes, "com.alipay.mobile.bill.list:id/billName", "") // comment-user-username
-		billAmountNode = dvc.FindUINode(nodes, "com.alipay.mobile.bill.list:id/billAmount", "")
-		billTime1Node  = dvc.FindUINode(nodes, "com.alipay.mobile.bill.list:id/timeInfo1", "")
-		billTime2Node  = dvc.FindUINode(nodes, "com.alipay.mobile.bill.list:id/timeInfo2", "")
+		billNameNode   = dvc.findUINode(nodes, "com.alipay.mobile.bill.list:id/billName", "") // comment-user-username
+		billAmountNode = dvc.findUINode(nodes, "com.alipay.mobile.bill.list:id/billAmount", "")
+		billTime1Node  = dvc.findUINode(nodes, "com.alipay.mobile.bill.list:id/timeInfo1", "")
+		billTime2Node  = dvc.findUINode(nodes, "com.alipay.mobile.bill.list:id/timeInfo2", "")
 		billComment    string // comment
 		billAccount    string // user-username
 		billAmount     string // +0.01
@@ -875,4 +687,98 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 		Amount:  billAmount,
 		Time:    billTime1 + "-" + billTime2,
 	}, nil
+}
+
+func (dvc *AdbDevice) gotoAlipayTabProfile() error {
+	if err := dvc.StartAliPay(); err != nil {
+		return err
+	}
+
+	time.Sleep(time.Millisecond * 300)
+
+	var (
+		resourceid   = "com.alipay.android.phone.wealth.home:id/tab_description"
+		resourcetext = "我的"
+		maxRetry     = 10
+		retryN       int
+		err          error
+	)
+
+RETRY:
+	retryN++
+	if retryN > maxRetry {
+		return fmt.Errorf("gotoAlipayTabProfile() failed after %d retries, error: %v", retryN, err)
+	}
+
+	dvc.StartAliPay() // ensure every time alipay at top
+	_, _, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
+	if err != nil {
+		if err == errUINodeNotFound {
+			log.Warnln("gotoAlipayTabProfile() goback one step and retry to find the '我的' button ...")
+		} else {
+			log.Warnln("gotoAlipayTabProfile().FindUINodeAndClick error:", err)
+		}
+		dvc.GoBack() // go back one step and retry
+		goto RETRY
+	}
+
+	return nil
+}
+
+func (dvc *AdbDevice) gotoAlipayListOrder() error {
+	if err := dvc.gotoAlipayTabProfile(); err != nil {
+		return err
+	}
+
+	time.Sleep(time.Millisecond * 300)
+
+	var (
+		resourceid   = "com.alipay.mobile.antui:id/item_left_text"
+		resourcetext = "账单"
+	)
+	_, _, err := dvc.FindUINodeAndClick(resourceid, resourcetext)
+	if err != nil {
+		log.Errorln("gotoAlipayListOrder().FindUINodeAndClick() error:", err)
+		return err
+	}
+
+	// now we expect the bill list activity at top
+	return dvc.waitAlipayBillListActive(10, time.Second)
+}
+
+func (dvc *AdbDevice) isAlipayActive() bool {
+	activity, _ := dvc.CurrentTopActivity()
+	return strings.Contains(activity, "com.eg.android.AlipayGphone")
+}
+
+func (dvc *AdbDevice) isAlipayBillListActive() bool { // 我的->订单
+	activity, _ := dvc.CurrentTopActivity()
+	return activity == "com.eg.android.AlipayGphone/com.alipay.mobile.bill.list.ui.BillMainListActivity"
+}
+
+func (dvc *AdbDevice) waitAlipayBillListActive(maxWait int, interval time.Duration) error {
+	for i := 1; i <= maxWait; i++ {
+		if dvc.isAlipayBillListActive() {
+			return nil
+		}
+		time.Sleep(interval)
+		continue
+	}
+	return errors.New("failed to wait for the AlipayBillList Activity")
+}
+
+func (dvc *AdbDevice) isAlipayBillSearchActive() bool { // 我的->订单->搜索
+	activity, _ := dvc.CurrentTopActivity()
+	return activity == "com.eg.android.AlipayGphone/com.alipay.mobile.bill.list.ui.BillWordSearchActivity_"
+}
+
+func (dvc *AdbDevice) waitAlipayBillSearchActive(maxWait int, interval time.Duration) error {
+	for i := 1; i <= maxWait; i++ {
+		if dvc.isAlipayBillSearchActive() {
+			return nil
+		}
+		time.Sleep(interval)
+		continue
+	}
+	return errors.New("failed to wait for the AlipayBillSearch Activity")
 }

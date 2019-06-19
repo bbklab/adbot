@@ -23,9 +23,6 @@ import (
 )
 
 var (
-	// max time for waitting backend payway's callback
-	subTimeout = time.Minute * 5
-
 	// failure retry interval for sending our callback
 	sendFailureRetry = []time.Duration{
 		time.Second * 10,  // 10s
@@ -45,7 +42,7 @@ func SubscribeAdbOrderAndSendCallback(orderID string) {
 	defer DeRegisterGoroutine("adb_order_callback", orderID)
 
 	// wait adb order callback event
-	err := SubscribeAdbOrderCallbackEvent(orderID, subTimeout)
+	err := SubscribeAdbOrderCallbackEvent(orderID, types.AdbOrderTimeout)
 	if err != nil {
 		MemoAdbOrderStatus(orderID, types.AdbOrderStatusTimeout)
 		return
@@ -449,15 +446,11 @@ func RunAdbEventWatcherLoop() {
 	defer DeRegisterGoroutine("adb_events_watcher", "system")
 
 	log.Printf("starting %s ...", loopName)
-	defer log.Warnf("stopped %s, node maybe removed", loopName)
+	defer log.Warnf("stopped %s", loopName)
 
 	// obtain adb device subscriber
 	sub := SubscribeAdbDeviceEvents()
 	defer EvictAdbDeviceEvents(sub)
-
-	// periodically timer notifier
-	ticker := time.NewTicker(time.Second * 30)
-	defer ticker.Stop()
 
 	// write adb device event to the client with sse format
 	for ev := range sub {
@@ -485,11 +478,11 @@ func checkDevicePendingOrders(dvcid string) {
 	dvcpendingmux.Lock()
 	defer dvcpendingmux.Unlock()
 
-	RegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
-	defer DeRegisterGoroutine("check_adb_device_pending_orders_in5m", dvcid)
+	RegisterGoroutine("check_adb_device_pending_orders", dvcid)
+	defer DeRegisterGoroutine("check_adb_device_pending_orders", dvcid)
 
-	// query device pending orders within 5m
-	query := bson.M{"device_id": dvcid, "status": types.AdbOrderStatusPending, "created_at": bson.M{"$gt": time.Now().Add(-time.Minute * 5)}}
+	// query device pending orders
+	query := bson.M{"device_id": dvcid, "status": types.AdbOrderStatusPending}
 	orders, err := store.DB().ListAdbOrders(nil, query)
 	if err != nil {
 		log.Errorf("query pending adb orders for device %s error: %v", dvcid, err)
@@ -501,7 +494,7 @@ func checkDevicePendingOrders(dvcid string) {
 		_, err := DoNodeCheckAdbOrder(nid, dvcid, orderid)
 		if err != nil {
 			log.Warnf("query node %s adb device %s order %s error: %v", nid, dvcid, orderid, err)
-			return
+			continue
 		}
 		// now we got the order on node adb device, then
 		//  - memo update the node status as paid
