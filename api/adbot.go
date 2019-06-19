@@ -775,14 +775,32 @@ func (s *Server) countAdbDevicesStatus(dvcs []*types.AdbDevice) (int64, int64) {
 }
 
 func (s *Server) wrapAdbDevice(dvc *types.AdbDevice) *types.AdbDeviceWrapper {
-	num, fee := scheduler.CountAdbDeviceThisDayOrders(dvc.ID)
-	return &types.AdbDeviceWrapper{
+	wrap := &types.AdbDeviceWrapper{
 		AdbDevice:       dvc,
-		TodayBill:       num,
-		TodayAmount:     fee,
-		TodayAmountYuan: float64(fee) / float64(100),
+		RecentAdbOrders: types.RecentAdbOrders{},
 		MaxAmountYuan:   float64(dvc.MaxAmount) / float64(100),
+		TodayPaidRate:   float64(0),
 	}
+
+	// today
+	todayStartAt, _ := utils.Today()
+	wrap.RecentAdbOrders.Today = scheduler.CountAdbOrdersByStatus(bson.M{"device_id": dvc.ID, "created_at": bson.M{"$gt": todayStartAt}})
+
+	// month
+	monthStartAt, _ := utils.CurrMonth()
+	wrap.RecentAdbOrders.Month = scheduler.CountAdbOrdersByStatus(bson.M{"device_id": dvc.ID, "created_at": bson.M{"$gt": monthStartAt}})
+
+	// today paid rate %
+	today := wrap.RecentAdbOrders.Today
+	paid, pending, timeout := today.Paid, today.Pending, today.Timeout
+	total := paid + pending + timeout
+	if total == 0 {
+		wrap.TodayPaidRate = float64(0)
+	} else {
+		wrap.TodayPaidRate = float64(paid*100) / float64(total)
+	}
+
+	return wrap
 }
 
 func (s *Server) wrapAdbOrder(o *types.AdbOrder) *types.AdbOrderWrapper {

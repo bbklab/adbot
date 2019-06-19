@@ -269,7 +269,7 @@ func checkOneAdbDeviceLimit(dvc *types.AdbDevice) bool {
 		return false
 	}
 
-	num, fee := CountAdbDeviceThisDayOrders(dvc.ID)
+	num, fee := countAdbDeviceTodayPaidOrders(dvc.ID)
 	if maxamount > 0 && fee > maxamount {
 		return true
 	}
@@ -279,21 +279,13 @@ func checkOneAdbDeviceLimit(dvc *types.AdbDevice) bool {
 	return false
 }
 
-// CountAdbDeviceThisDayOrders count adb device today's order & fee
-func CountAdbDeviceThisDayOrders(dvcID string) (int, int) {
+func countAdbDeviceTodayPaidOrders(dvcID string) (int, int) {
 	var (
 		start, end = utils.Today()
 		query      = bson.M{
 			"device_id": dvcID,
 			"status":    types.AdbOrderStatusPaid,
-			"$and": []bson.M{
-				{
-					"created_at": bson.M{"$gt": start},
-				},
-				{
-					"created_at": bson.M{"$lt": end},
-				},
-			},
+			"$and":      []bson.M{{"created_at": bson.M{"$gt": start}}, {"created_at": bson.M{"$lt": end}}},
 		}
 	)
 	return store.DB().CountAdbOrders(query)
