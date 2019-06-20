@@ -86,12 +86,12 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.PUT("/adb_orders/:order_id/recallback", s.reCallbackAdbOrder)
 	// adb public api
 	mux.GET("/adb_public_api", s.getAdbPublicAPIDocs)
-	// adb paygate
-	//  - called by out side pay system, only autheticated by secret header
-	mux.POST("/adb_paygate/new", s.newAdbOrder)
 	// adb events
 	mux.POST("/adb_events", s.receiveAdbEvents) // public, used by adbnode
 	mux.GET("/adb_events", s.watchAdbEvents)
+	// adb paygate
+	//  - called by out side pay system, only autheticated by secret header
+	mux.POST("/adb_paygate/new", s.payGateNewAdbOrder)
 
 	// settings
 	mux.GET("/settings", s.getSettings)

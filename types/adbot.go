@@ -130,6 +130,12 @@ type NewAdbOrderReq struct {
 	Fee        int    `json:"fee" bson:"fee"`                   // must: order fee [1,10000000000]
 	Attach     string `json:"attach" bson:"attach"`             // optional: out side custom data, [0-128]
 	NotifyURL  string `json:"notify_url" bson:"notify_url"`     // optional: call back url, [0-128]
+	Sign       string `json:"sign" bson:"sign"`                 // must: signature, [1-64]
+}
+
+// StringToSign return **uniq** string to be signed
+func (r *NewAdbOrderReq) StringToSign() string {
+	return fmt.Sprintf("out_order_id=%s&fee=%d", r.OutOrderID, r.Fee)
 }
 
 // Valid is exported
@@ -165,16 +171,24 @@ func (r *NewAdbOrderReq) Valid() error {
 		}
 	}
 
+	if err := validator.String(r.Sign, 1, 64, nil); err != nil {
+		return fmt.Errorf("signature %v", err)
+	}
+
 	return nil
 }
 
 // NewAdbOrderResp is a new adb order response
 type NewAdbOrderResp struct {
-	Code    int       `json:"code" bson:"code"`       // 1:success  0:error
-	Message string    `json:"message" bson:"message"` // error message while Code==1
-	QRText  string    `json:"qrtext" bson:"qrtext"`   // qrcode raw text
-	QRImage string    `json:"qrimage" bson:"-"`       // qrcode png base64: data:image/png;base64,{xxxx}  (note: ignore mgo db save)
-	Time    time.Time `json:"time" bson:"time"`       // set by us, only used for tracking order steps time line
+	Code       int       `json:"code" bson:"code"`                 // 1:success  0:error
+	Message    string    `json:"message" bson:"message"`           // error message while Code==1
+	QRText     string    `json:"qrtext" bson:"qrtext"`             // qrcode raw text
+	QRImage    string    `json:"qrimage" bson:"-"`                 // qrcode png base64: data:image/png;base64,{xxxx}  (note: ignore mgo db save)
+	OrderID    string    `json:"order_id" bson:"order_id"`         // adbot order id
+	OutOrderID string    `json:"out_order_id" bson:"out_order_id"` // copy from Req.OutOrderID
+	Fee        int       `json:"fee" bson:"fee"`                   // copy from Req.Fee
+	FeeYuan    float64   `json:"fee_yuan" bson:"fee_yuan"`         // copy from Req, Req.Fee/100
+	Time       time.Time `json:"time" bson:"time"`                 // set by us, only used for tracking order steps time line
 }
 
 // NewAdbOrderCallback is exported

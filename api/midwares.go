@@ -35,9 +35,9 @@ func (s *Server) corsMW(ctx *httpmux.Context) {
 
 	ctx.Res.Header().Add("Access-Control-Allow-Origin", orig)
 	ctx.Res.Header().Add("Access-Control-Allow-Credentials", "true")
-	ctx.Res.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Registry-Auth, Cache-Control, Authorization, Total-Records, SS-Renewal-OrderID, QRCode-Type, SS-Access-Token, Admin-Access-Token")
+	ctx.Res.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Registry-Auth, Cache-Control, Authorization, Total-Records, Admin-Access-Token, ADB-PAYGATE-SECRET")
 	ctx.Res.Header().Add("Access-Control-Allow-Methods", "HEAD, GET, POST, DELETE, PUT, PATCH, OPTIONS")
-	ctx.Res.Header().Add("Access-Control-Expose-Headers", "Total-Records, SS-Renewal-OrderID, QRCode-Type, SS-Access-Token, Admin-Access-Token")
+	ctx.Res.Header().Add("Access-Control-Expose-Headers", "Total-Records, Admin-Access-Token, ADB-PAYGATE-SECRET")
 }
 
 // global midware to bypass and end some special http requests
