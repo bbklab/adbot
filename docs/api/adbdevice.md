@@ -59,17 +59,35 @@ response contains Header: `Total-Records`
     "status": "online",   // 设备状态: online, offline
     "error": "",          // offline时候的错误信息
     "max_amount": 0,      // 单日最大交易金额，0表示不限，单位CNY
+    "max_amount_yuan": 0,
     "max_bill": 0,        // 单日最大交易订单数, 0表示不限
     "over_quota": false,  // 当前设备是否已经超出了单日最大配额(上面任意一个配额)
     "weight": 0,          // 权重, 数字0-100, 数字越大表示使用的概率越大，0表示此设备将不被使用
+    "today_paid_rate": 50,  // 今日订单成功率
+    "recent_adb_orders": {  
+      "today": {            // 该设备今日订单统计
+        "paid": 1,           // 已支付订单数
+        "paid_bill": 0.19,   // 已支付订单金额
+        "pending": 0,        // 待支付
+        "pending_bill": 0,
+        "timeout": 1,        // 等待超时
+        "timeout_bill": 0.19
+      },
+      "month": {           // 该设备本月订单统计
+        "paid": 37,
+        "paid_bill": 14.11,
+        "pending": 0,
+        "pending_bill": 0,
+        "timeout": 4,
+        "timeout_bill": 2.41
+      }
+    },
     "alipay": {           // 绑定的支付宝账户
         "user_id": "2088032017360044",   // 支付宝UserID   (必填)
         "username": "13619840773",       // 支付宝账号     (必填)
         "nickname": "sldzz"              // 支付宝账号昵称 (非必填)
     },
     "wxpay": null,
-    "today_bill": 0,      // 今日订单数
-    "today_amount": 0     // 今日交易金额
   },
   {
     "id": "546052d21f384",
