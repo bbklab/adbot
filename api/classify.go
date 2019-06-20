@@ -17,14 +17,14 @@ func (s *Server) classify() {
 	s.classifyOnce.Do(func() {
 		s.classified = map[string][]httpmux.HandleFunc{
 			catePublic: {
-				s.ping,             // ping pong (for node join)
-				s.queryLeader,      // query current leader (for node join)
-				s.version,          // query version
-				s.anyUser,          // query if any user
-				s.addUser,          // add first admin user
-				s.userAuthLogin,    // user login
-				s.newAdbOrder,      // adb paygate: new ordek & check order (protected by secret header)
-				s.receiveAdbEvents, // used by adb nodes to report adb device events
+				s.ping,               // ping pong (for node join)
+				s.queryLeader,        // query current leader (for node join)
+				s.version,            // query version
+				s.anyUser,            // query if any user
+				s.addUser,            // add first admin user
+				s.userAuthLogin,      // user login
+				s.payGateNewAdbOrder, // adb paygate: new ordek (protected by secret header)
+				s.receiveAdbEvents,   // used by adb nodes to report adb device events
 			},
 			cateNonForward: {
 				s.ping,        // ping pong (for node join)

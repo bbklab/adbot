@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +24,10 @@ import (
 )
 
 var (
+	errSignError = errors.New("signature error")
+)
+
+var (
 	// failure retry interval for sending our callback
 	sendFailureRetry = []time.Duration{
 		time.Second * 10,  // 10s
@@ -32,6 +37,28 @@ var (
 		time.Second * 900, // 15m
 	}
 )
+
+// VerifySignature verify the given request
+func VerifySignature(key string, data interface{}) error {
+	switch req := data.(type) {
+	case nil:
+		return errors.New("nil data for signature verify")
+
+	case *types.NewAdbOrderReq:
+		var expect = sign(key, req.StringToSign())
+		if req.Sign != expect {
+			return errSignError
+		}
+
+	default:
+		return errors.New("unexpected data type for signature verify")
+	}
+	return nil
+}
+
+func sign(key, data string) string {
+	return strings.ToUpper(utils.Md5sum([]byte(strings.TrimSpace(data + "&key=" + key))))
+}
 
 // SubscribeAdbOrderAndSendCallback subscribe wait given adb order's callback until timeout and
 // send our callback to adb order's NotifyURL according by given failure retry interval
