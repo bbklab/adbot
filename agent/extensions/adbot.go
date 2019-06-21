@@ -187,8 +187,7 @@ func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
 
 				if !dvc.IsAwake() {
 					dvc.AwakenScreen()
-					dvc.SwipeUpUnlock()
-					dvc.GotoHome()
+					// dvc.SwipeUpUnlock() // note: this require the adb device must disabled the screen lock via USB Debug Options
 				}
 
 				if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
