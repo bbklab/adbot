@@ -4,7 +4,7 @@ package adbot
 type AdbHandler interface {
 	ListAdbDevices() ([]string, error)
 	WatchAdbEvents() (<-chan *AdbEvent, chan struct{})
-	NewDevice(serial string) AdbDeviceHandler
+	NewDevice(serial string) (AdbDeviceHandler, error)
 }
 
 // AdbDeviceHandler represents one specified adb device handler

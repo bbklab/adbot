@@ -232,6 +232,15 @@ func (agent *Agent) checkAdbAlipayOrder(ctx *httpmux.Context) {
 		orderID = ctx.Query["order_id"]
 	)
 
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+	if orderID == "" {
+		ctx.BadRequest("order id required")
+		return
+	}
+
 	order, err := extensions.CheckAdbAlipayOrder(dvcID, orderID)
 	if err != nil {
 		ctx.AutoError(err)
@@ -239,4 +248,24 @@ func (agent *Agent) checkAdbAlipayOrder(ctx *httpmux.Context) {
 	}
 
 	ctx.JSON(200, order)
+}
+
+func (agent *Agent) screenCapAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	imgbs, err := extensions.AdbDeviceScreenCap(dvcID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Res.Header().Set("Content-Type", "image/png")
+	ctx.Res.Write(imgbs)
 }

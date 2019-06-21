@@ -89,6 +89,22 @@ func (c *AdbotClient) InspectAdbDevice(id string) (*types.AdbDeviceWrapper, erro
 	return ret, err
 }
 
+// ScreenCapAdbDevice implement Client interface
+func (c *AdbotClient) ScreenCapAdbDevice(id string) ([]byte, error) {
+	resp, err := c.sendRequest("GET", fmt.Sprintf("/api/adb_devices/%s/screencap", id), nil, 0, "", "")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return nil, &APIError{code, string(bs)}
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 // SetAdbDeviceBill implement Client interface
 func (c *AdbotClient) SetAdbDeviceBill(id string, val int) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/api/adb_devices/%s/bill?val=%d", id, val), nil, 0, "", "")

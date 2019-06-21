@@ -73,12 +73,13 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/adb_devices", s.listAdbDevices)
 	mux.GET("/adb_devices/:device_id", s.getAdbDevice)
 	mux.PATCH("/adb_devices/:device_id", s.updateAdbDevice)
+	mux.GET("/adb_devices/:device_id/screencap", s.screenCapAdbDevice)
 	mux.PUT("/adb_devices/:device_id/bill", s.setAdbDeviceBill)
 	mux.PUT("/adb_devices/:device_id/amount", s.setAdbDeviceAmount)
 	mux.PUT("/adb_devices/:device_id/weight", s.setAdbDeviceWeight)
 	mux.PUT("/adb_devices/:device_id/alipay", s.bindAdbDeviceAlipay)
 	mux.DELETE("/adb_devices/:device_id/alipay", s.revokeAdbDeviceAlipay)
-	mux.GET("/adb_devices/:device_id/verify", s.verifyAdbDevice) // verify the adb device and test payment charging
+	mux.GET("/adb_devices/:device_id/verify", s.verifyAdbDevice) // verify the adb device binded alipay account and test payment charging
 	// mux.DELETE("/adb_devices/:device_id", s.rmAdbDevice) // TODO
 	// adb orders
 	mux.GET("/adb_orders", s.listAdbOrders)
