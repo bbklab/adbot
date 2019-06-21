@@ -214,6 +214,26 @@ func (s *Server) screenCapAdbDevice(ctx *httpmux.Context) {
 	ctx.Res.Write(imgbs)
 }
 
+func (s *Server) rebootAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	err = scheduler.DoNodeRebootAdbDevice(dvc.NodeID, dvc.ID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
 func (s *Server) setAdbDeviceBill(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]

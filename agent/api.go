@@ -269,3 +269,22 @@ func (agent *Agent) screenCapAdbDevice(ctx *httpmux.Context) {
 	ctx.Res.Header().Set("Content-Type", "image/png")
 	ctx.Res.Write(imgbs)
 }
+
+func (agent *Agent) rebootAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	err := extensions.AdbDeviceReboot(dvcID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}

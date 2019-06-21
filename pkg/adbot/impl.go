@@ -112,6 +112,12 @@ func (dvc *AdbDevice) Online() bool {
 	return state == goadb.StateOnline
 }
 
+// Reboot implement AdbDeviceHandler
+func (dvc *AdbDevice) Reboot() error {
+	_, err := dvc.Run("reboot")
+	return err
+}
+
 // Run implement AdbDeviceHandler
 func (dvc *AdbDevice) Run(cmd string, args ...string) (string, error) {
 	dvc.l.Lock()

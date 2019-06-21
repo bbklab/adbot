@@ -285,3 +285,27 @@ func AdbDeviceScreenCap(dvcID string) ([]byte, error) {
 	}
 	return dvc.ScreenCap()
 }
+
+// AdbDeviceReboot reboot given adb device
+func AdbDeviceReboot(dvcID string) error {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	// reboot
+	err = dvc.Reboot()
+	if err != nil {
+		return err
+	}
+
+	// report device die event
+	reportAdbEvent(&adbot.AdbEvent{
+		Serial:  dvcID,
+		Type:    adbot.AdbEventDeviceDie,
+		Message: "device rebooted",
+		Time:    time.Now(),
+	})
+
+	return nil
+}

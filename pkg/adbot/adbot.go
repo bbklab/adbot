@@ -11,6 +11,7 @@ type AdbHandler interface {
 type AdbDeviceHandler interface {
 	Serial() (string, error)
 	Online() bool
+	Reboot() error
 	Run(cmd string, args ...string) (string, error) // similar as: adb -s {id} shell
 	SysInfo() (*AndroidSysInfo, error)
 	BatteryInfo() (*AndroidBatteryInfo, error)

@@ -201,6 +201,9 @@ Query Parameters:
 ### ScreenCap
 `GET /api/adb_devices/{device_id}/screencap`  -  get screencap image on adb device
 
+### Reboot
+`PATCH /api/adb_devices/{device_id}/reboot`  -  reboot node adb device
+
 
 ### Remove
 > TODO

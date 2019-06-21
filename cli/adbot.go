@@ -135,6 +135,7 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceListCommand(),         // ls
 			adbDeviceInspectCommand(),      // inspect
 			adbDeviceScreenCapCommand(),    // screencap
+			adbDeviceRebootCommand(),       // reboot
 			adbDeviceSetBillCommand(),      // set-bill
 			adbDeviceSetAmountCommand(),    // set-amount
 			adbDeviceSetWeightCommand(),    // set-weight
@@ -177,6 +178,15 @@ func adbDeviceScreenCapCommand() cli.Command {
 		Usage:     "take screencap on an adb device",
 		ArgsUsage: "DEVICE",
 		Action:    screenCapAdbDevice,
+	}
+}
+
+func adbDeviceRebootCommand() cli.Command {
+	return cli.Command{
+		Name:      "reboot",
+		Usage:     "reboot an adb device",
+		ArgsUsage: "DEVICE",
+		Action:    rebootAdbDevice,
 	}
 }
 
@@ -438,6 +448,29 @@ func screenCapAdbDevice(c *cli.Context) error {
 	}
 
 	os.Stdout.Write(append([]byte("screencap.png"), '\r', '\n'))
+	return nil
+}
+
+func rebootAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	err = client.RebootAdbDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
 	return nil
 }
 

@@ -105,6 +105,22 @@ func (c *AdbotClient) ScreenCapAdbDevice(id string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+// RebootAdbDevice implement Client interface
+func (c *AdbotClient) RebootAdbDevice(id string) error {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/reboot", id), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
 // SetAdbDeviceBill implement Client interface
 func (c *AdbotClient) SetAdbDeviceBill(id string, val int) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/api/adb_devices/%s/bill?val=%d", id, val), nil, 0, "", "")
