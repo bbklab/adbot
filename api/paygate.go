@@ -15,10 +15,8 @@ import (
 )
 
 // adb paygate
-//  - public apis (visit by out side pay system)
-//  - protected by https (TODO)
-//  - protected by ip range check (TODO)
-//  - protected by fixed access token: ADB-PAYGATE-SECRET
+//  - public apis, visit by out side pay system
+//  - protected by signature verify (with payGateSecret)
 //
 func (s *Server) payGateNewAdbOrder(ctx *httpmux.Context) {
 	var (
@@ -36,20 +34,6 @@ func (s *Server) payGateNewAdbOrder(ctx *httpmux.Context) {
 		goto END
 	}
 	if err = req.Valid(); err != nil {
-		goto END
-	}
-
-	// TODO
-	// check the source ip allowed
-	// get source ip, if it is allowed
-	// if !sourceAllow() {
-	// err = errors.New("source deny")
-	// goto END
-	// }
-
-	// check the fixed paygate token
-	if ctx.Req.Header.Get("ADB-PAYGATE-SECRET") != payGateSecret {
-		err = errors.New("adbpay secret deny")
 		goto END
 	}
 
