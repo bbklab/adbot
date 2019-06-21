@@ -49,17 +49,21 @@ type adbMgr struct {
 }
 
 // getDevice get or insert given device id handler
-func (mgr *adbMgr) getDevice(id string) adbot.AdbDeviceHandler {
+func (mgr *adbMgr) getDevice(id string) (adbot.AdbDeviceHandler, error) {
 	mgr.Lock()
 	defer mgr.Unlock()
 
 	dh, ok := mgr.dhs[id]
 	if ok {
-		return dh
+		return dh, nil
+	}
+
+	newdh, err := mgr.ah.NewDevice(id)
+	if err != nil {
+		return nil, err
 	}
 
 	// add new device handler
-	newdh := mgr.ah.NewDevice(id)
 	mgr.dhs[id] = newdh
 
 	// launch new device alipay watcher
@@ -67,7 +71,7 @@ func (mgr *adbMgr) getDevice(id string) adbot.AdbDeviceHandler {
 		go mgr.watchDeviceAlipay(newdh, id)
 	}
 
-	return newdh
+	return newdh, nil
 }
 
 func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
@@ -175,7 +179,12 @@ func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
 			go func(id string) {
 				defer wg.Done()
 
-				dvc := am.getDevice(id)
+				dvc, err := am.getDevice(id)
+				if err != nil {
+					log.Warnf("%s getDevice() on %s error: %v", loopName, id, err)
+					return
+				}
+
 				if !dvc.IsAwake() {
 					dvc.AwakenScreen()
 					dvc.SwipeUpUnlock()
@@ -227,7 +236,12 @@ func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
 		go func(id string) {
 			defer wg.Done()
 
-			dvc := am.getDevice(id)
+			dvc, err := am.getDevice(id)
+			if err != nil {
+				log.Errorln("get adb device handler error", id, err)
+				return
+			}
+
 			info, err := dvc.SysInfo()
 			if err != nil {
 				log.Errorln("get adb device sysinfo error", id, err)
@@ -246,7 +260,10 @@ func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
 
 // CheckAdbAlipayOrder check one alipay order on given adb device
 func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
-	dvc := am.getDevice(dvcID)
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return nil, err
+	}
 
 	if !dvc.IsAwake() {
 		err := dvc.AwakenScreen()
@@ -258,4 +275,37 @@ func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
 	}
 
 	return dvc.AlipaySearchOrder(orderID)
+}
+
+// AdbDeviceScreenCap take screen cap on given adb device
+func AdbDeviceScreenCap(dvcID string) ([]byte, error) {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return nil, err
+	}
+	return dvc.ScreenCap()
+}
+
+// AdbDeviceReboot reboot given adb device
+func AdbDeviceReboot(dvcID string) error {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	// reboot
+	err = dvc.Reboot()
+	if err != nil {
+		return err
+	}
+
+	// report device die event
+	reportAdbEvent(&adbot.AdbEvent{
+		Serial:  dvcID,
+		Type:    adbot.AdbEventDeviceDie,
+		Message: "device rebooted",
+		Time:    time.Now(),
+	})
+
+	return nil
 }

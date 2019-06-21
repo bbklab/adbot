@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"text/tabwriter"
 	"time"
@@ -36,10 +37,10 @@ var (
 	AdbNodeTableLine = "{{.Node.ID}}\t" + AdbNodeTableStatus + "\t" + AdbNodeTableHostname + "\t" + "{{hostof .Node.RemoteAddr}}\t" + AdbNodeGeoInfo + "\t" + AdbNodeTableDevice + "\t\n"
 
 	// adb device
-	AdbDeviceTableHeader  = "DEVICE ID\tNODE ID\t" + color.Yellow("STATUS") + "\tWEIGHT\tBILL\tAMOUNT\tMANUFACTURER & MODEL\tANDROID VERSION\tBATTERY\tBOOT AT\t\n"
+	AdbDeviceTableHeader  = "DEVICE ID\tNODE ID\t" + color.Yellow("STATUS") + "\tWEIGHT\tBILL\tAMOUNT\tRATE\tMANUFACTURER & MODEL\tANDROID VERSION\tBATTERY\tBOOT AT\t\n"
 	AdbDeviceTableStatus  = "{{if eq .Status \"online\"}}{{green .Status}}{{else}}{{red .Status}}{{end}}"
 	AdbDeviceTableBattery = "{{$level := multiply .SysInfo.Battery.Level 100}}{{divide $level .SysInfo.Battery.Scale 0}}%" // (100*level/scale)%
-	AdbDeviceTableLine    = "{{.ID}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.TodayBill}}/{{.MaxBill}}\t{{.TodayAmountYuan}}/{{.MaxAmountYuan}}\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
+	AdbDeviceTableLine    = "{{.ID}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.RecentAdbOrders.Today.Paid}}/{{.MaxBill}}\t{{.RecentAdbOrders.Today.PaidBill}}/{{.MaxAmountYuan}}\t{{.TodayPaidRate}}%\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
 )
 
 var (
@@ -133,6 +134,8 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceWatchCommand(),        // watch
 			adbDeviceListCommand(),         // ls
 			adbDeviceInspectCommand(),      // inspect
+			adbDeviceScreenCapCommand(),    // screencap
+			adbDeviceRebootCommand(),       // reboot
 			adbDeviceSetBillCommand(),      // set-bill
 			adbDeviceSetAmountCommand(),    // set-amount
 			adbDeviceSetWeightCommand(),    // set-weight
@@ -166,6 +169,24 @@ func adbDeviceInspectCommand() cli.Command {
 		Usage:     "inspect details of an adb device",
 		ArgsUsage: "DEVICE",
 		Action:    inspectAdbDevice,
+	}
+}
+
+func adbDeviceScreenCapCommand() cli.Command {
+	return cli.Command{
+		Name:      "screencap",
+		Usage:     "take screencap on an adb device",
+		ArgsUsage: "DEVICE",
+		Action:    screenCapAdbDevice,
+	}
+}
+
+func adbDeviceRebootCommand() cli.Command {
+	return cli.Command{
+		Name:      "reboot",
+		Usage:     "reboot an adb device",
+		ArgsUsage: "DEVICE",
+		Action:    rebootAdbDevice,
 	}
 }
 
@@ -400,6 +421,57 @@ func inspectAdbDevice(c *cli.Context) error {
 	}
 
 	return utils.PrettyJSON(nil, dvc)
+}
+
+func screenCapAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	imgbs, err := client.ScreenCapAdbDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile("screencap.png", imgbs, os.FileMode(0644))
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("screencap.png"), '\r', '\n'))
+	return nil
+}
+
+func rebootAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	err = client.RebootAdbDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
+	return nil
 }
 
 func setAdbDeviceBill(c *cli.Context) error {

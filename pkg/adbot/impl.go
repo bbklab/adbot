@@ -75,10 +75,12 @@ func (a *Adb) WatchAdbEvents() (<-chan *AdbEvent, chan struct{}) {
 }
 
 // NewDevice implement AdbHandler
-func (a *Adb) NewDevice(serial string) AdbDeviceHandler {
-	return &AdbDevice{
+func (a *Adb) NewDevice(serial string) (AdbDeviceHandler, error) {
+	dvc := &AdbDevice{
 		h: a.h.Device(goadb.DeviceWithSerial(serial)),
 	}
+	_, err := dvc.h.Serial()
+	return dvc, err
 }
 
 //
@@ -108,6 +110,12 @@ func (dvc *AdbDevice) Online() bool {
 		return false
 	}
 	return state == goadb.StateOnline
+}
+
+// Reboot implement AdbDeviceHandler
+func (dvc *AdbDevice) Reboot() error {
+	_, err := dvc.Run("reboot")
+	return err
 }
 
 // Run implement AdbDeviceHandler

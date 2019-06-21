@@ -4,13 +4,14 @@ package adbot
 type AdbHandler interface {
 	ListAdbDevices() ([]string, error)
 	WatchAdbEvents() (<-chan *AdbEvent, chan struct{})
-	NewDevice(serial string) AdbDeviceHandler
+	NewDevice(serial string) (AdbDeviceHandler, error)
 }
 
 // AdbDeviceHandler represents one specified adb device handler
 type AdbDeviceHandler interface {
 	Serial() (string, error)
 	Online() bool
+	Reboot() error
 	Run(cmd string, args ...string) (string, error) // similar as: adb -s {id} shell
 	SysInfo() (*AndroidSysInfo, error)
 	BatteryInfo() (*AndroidBatteryInfo, error)

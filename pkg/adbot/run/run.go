@@ -30,7 +30,10 @@ func main() {
 	}
 
 	id := "546052d21f384" // test only one target device
-	dvc := adb.NewDevice(id)
+	dvc, err := adb.NewDevice(id)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	if !dvc.Online() {
 		log.Fatalln("device not online", id)
 	}
@@ -101,7 +104,10 @@ func testFull() {
 	}
 
 	for _, id := range ids {
-		dvc := adb.NewDevice(id)
+		dvc, err := adb.NewDevice(id)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if !dvc.Online() {
 			log.Warnln("device not online", id)
 			continue

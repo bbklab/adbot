@@ -198,6 +198,12 @@ Content-Type: application/json
 Query Parameters:
   - **fee**       - fee, by RMB cent
 
+### ScreenCap
+`GET /api/adb_devices/{device_id}/screencap`  -  get screencap image on adb device
+
+### Reboot
+`PATCH /api/adb_devices/{device_id}/reboot`  -  reboot node adb device
+
 
 ### Remove
 > TODO
