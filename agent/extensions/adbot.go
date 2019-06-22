@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/google/shlex"
 
 	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/routine"
@@ -307,4 +308,23 @@ func AdbDeviceReboot(dvcID string) error {
 	})
 
 	return nil
+}
+
+// RunAdbDeviceCmd run command on device adb device
+func RunAdbDeviceCmd(dvcID, cmd string) ([]byte, error) {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return nil, err
+	}
+
+	command, err := shlex.Split(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("bad command: %v", err)
+	}
+	if len(command) == 0 {
+		return nil, fmt.Errorf("bad command: null")
+	}
+
+	out, err := dvc.Run(command[0], command[1:]...)
+	return []byte(out), err
 }

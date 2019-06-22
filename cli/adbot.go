@@ -51,6 +51,13 @@ var (
 		},
 	}
 
+	execAdbDeviceFlags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "cmd",
+			Usage: "command to be executed on the adb device",
+		},
+	}
+
 	setAdbDeviceBillFlags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "value",
@@ -136,6 +143,7 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceInspectCommand(),      // inspect
 			adbDeviceScreenCapCommand(),    // screencap
 			adbDeviceRebootCommand(),       // reboot
+			adbDeviceExecCommand(),         // exec
 			adbDeviceSetBillCommand(),      // set-bill
 			adbDeviceSetAmountCommand(),    // set-amount
 			adbDeviceSetWeightCommand(),    // set-weight
@@ -187,6 +195,16 @@ func adbDeviceRebootCommand() cli.Command {
 		Usage:     "reboot an adb device",
 		ArgsUsage: "DEVICE",
 		Action:    rebootAdbDevice,
+	}
+}
+
+func adbDeviceExecCommand() cli.Command {
+	return cli.Command{
+		Name:      "exec",
+		Usage:     "exec command on an adb device",
+		ArgsUsage: "DEVICE",
+		Flags:     execAdbDeviceFlags,
+		Action:    execAdbDevice,
 	}
 }
 
@@ -471,6 +489,37 @@ func rebootAdbDevice(c *cli.Context) error {
 	}
 
 	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
+	return nil
+}
+
+func execAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		nodeID = c.Args().First()
+	)
+
+	if nodeID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	var (
+		cmd = c.String("cmd")
+	)
+
+	if cmd == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	bs, err := client.RunAdbDeviceCmd(nodeID, cmd)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(bs)
 	return nil
 }
 

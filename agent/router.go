@@ -30,4 +30,5 @@ func (agent *Agent) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/adbot/alipay_order", agent.checkAdbAlipayOrder)
 	mux.GET("/adbot/device/screencap", agent.screenCapAdbDevice)
 	mux.PATCH("/adbot/device/reboot", agent.rebootAdbDevice)
+	mux.POST("/adbot/device/exec", agent.runAdbDeviceCmd)
 }

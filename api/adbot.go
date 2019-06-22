@@ -234,6 +234,32 @@ func (s *Server) rebootAdbDevice(ctx *httpmux.Context) {
 	ctx.Status(200)
 }
 
+func (s *Server) execCmdAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	var deviceCmd = new(types.AdbDeviceCmd)
+	if err := ctx.Bind(deviceCmd); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	bs, err := scheduler.DoNodeAdbDeviceExec(dvc.NodeID, dvc.ID, deviceCmd)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Text(200, string(bs))
+}
+
 func (s *Server) setAdbDeviceBill(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]
