@@ -188,7 +188,6 @@ func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
 
 				if !dvc.IsAwake() {
 					dvc.AwakenScreen()
-					// dvc.SwipeUpUnlock() // note: this require the adb device must disabled the screen lock via USB Debug Options
 				}
 
 				if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
@@ -270,8 +269,6 @@ func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
 		if err != nil {
 			return nil, err
 		}
-		dvc.SwipeUpUnlock()
-		dvc.GotoHome()
 	}
 
 	return dvc.AlipaySearchOrder(orderID)

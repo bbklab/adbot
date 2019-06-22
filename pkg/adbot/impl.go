@@ -90,7 +90,7 @@ func (a *Adb) NewDevice(serial string) (AdbDeviceHandler, error) {
 // AdbDevice is an AdbDeviceHandler implemention
 type AdbDevice struct {
 	h *goadb.Device
-	l sync.Mutex // synchronized Adb Ops including any combined or single ops
+	l sync.Mutex // synchronized Adb Ops including any combined or single ops, mostly are `input` ops
 
 	// alipay button XY
 	alipayBillListSearchButton [2]int // 我的->账单->搜索
@@ -120,10 +120,6 @@ func (dvc *AdbDevice) Reboot() error {
 
 // Run implement AdbDeviceHandler
 func (dvc *AdbDevice) Run(cmd string, args ...string) (string, error) {
-	dvc.l.Lock()
-	defer dvc.l.Unlock()
-
-	log.Debugln("Run()", cmd, args)
 	return dvc.h.RunCommand(cmd, args...)
 }
 
@@ -166,6 +162,9 @@ func (dvc *AdbDevice) IsAwake() bool {
 
 // AwakenScreen implement AdbDeviceHandler
 func (dvc *AdbDevice) AwakenScreen() error {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+
 	dvc.Run("input", "keyevent", "224")
 	if dvc.IsAwake() {
 		return nil
@@ -178,6 +177,7 @@ func (dvc *AdbDevice) AwakenScreen() error {
 		if err != nil {
 			log.Warnln("AwakenScreen() error:", err, "-", string(bs))
 		}
+		time.Sleep(time.Millisecond * 500)
 	}
 
 	return errors.New("failed to awaken screen")
@@ -202,36 +202,50 @@ func (dvc *AdbDevice) ScreenCap() ([]byte, error) {
 
 // GotoHome implement AdbDeviceHandler
 func (dvc *AdbDevice) GotoHome() error {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.gotoHomeUnsafe()
+}
+
+func (dvc *AdbDevice) gotoHomeUnsafe() error {
 	_, err := dvc.Run("input", "keyevent", "3")
 	return err
 }
 
 // GoBack implement AdbDeviceHandler
 func (dvc *AdbDevice) GoBack() error {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.gobackUnsafe()
+}
+
+func (dvc *AdbDevice) gobackUnsafe() error {
 	_, err := dvc.Run("input", "keyevent", "4")
 	return err
 }
 
 // Click implement AdbDeviceHandler
 func (dvc *AdbDevice) Click(x, y int) error {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.clickUnsafe(x, y)
+}
+
+func (dvc *AdbDevice) clickUnsafe(x, y int) error { // maybe called within other combined ops
 	_, err := dvc.Run("input", "tap", strconv.Itoa(x), strconv.Itoa(y))
 	return err
 }
 
 // Swipe implement AdbDeviceHandler
 func (dvc *AdbDevice) Swipe(x1, y1, x2, y2 int) error {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.swipeUnsafe(x1, y1, x2, y2)
+}
+
+func (dvc *AdbDevice) swipeUnsafe(x1, y1, x2, y2 int) error {
 	_, err := dvc.Run("input", "swipe", strconv.Itoa(x1), strconv.Itoa(y1), strconv.Itoa(x2), strconv.Itoa(y2))
 	return err
-}
-
-// SwipeUpUnlock implement AdbDeviceHandler
-func (dvc *AdbDevice) SwipeUpUnlock() error { // wipe up to unlock
-	return dvc.Swipe(300, 1200, 300, 0) // FIXME bottom hardcoded = 1200
-}
-
-// SwipeDownShowNotify implement AdbDeviceHandler
-func (dvc *AdbDevice) SwipeDownShowNotify() error { // pull down from top to show the notifies
-	return dvc.Swipe(300, 0, 300, 1200)
 }
 
 // CurrentTopActivity implement AdbDeviceHandler
@@ -256,9 +270,15 @@ func (dvc *AdbDevice) CurrentTopActivity() (string, error) {
 
 // DumpCurrentUI implement AdbDeviceHandler
 func (dvc *AdbDevice) DumpCurrentUI() ([]*AndroidUINode, error) {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.dumpCurrentUIUnsafe()
+}
+
+func (dvc *AdbDevice) dumpCurrentUIUnsafe() ([]*AndroidUINode, error) {
 	bs, err := dvc.Run("uiautomator", "dump")
 	if err != nil {
-		log.Errorln("DumpCurrentUI().ui.dump error:", err)
+		log.Errorln("dumpCurrentUI().ui.dump error:", err)
 		return nil, err
 	}
 
@@ -270,7 +290,7 @@ func (dvc *AdbDevice) DumpCurrentUI() ([]*AndroidUINode, error) {
 
 	reader, err := dvc.h.OpenRead(xmlfile)
 	if err != nil {
-		log.Errorln("DumpCurrentUI().read.xml.file error:", xmlfile, err)
+		log.Errorln("dumpCurrentUI().read.xml.file error:", xmlfile, err)
 		return nil, err
 	}
 	defer reader.Close()
@@ -285,9 +305,15 @@ var (
 
 // FindUINodeAndClick implement AdbDeviceHandler
 func (dvc *AdbDevice) FindUINodeAndClick(resourceid, resourcetext string) (int, int, error) {
-	nodes, err := dvc.DumpCurrentUI()
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+	return dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
+}
+
+func (dvc *AdbDevice) findUINodeAndClickUnsafe(resourceid, resourcetext string) (int, int, error) {
+	nodes, err := dvc.dumpCurrentUIUnsafe()
 	if err != nil {
-		log.Errorln("FindUINodeAndClick().DumpCurrentUI() error:", err)
+		log.Errorln("findUINodeAndClick().DumpCurrentUI() error:", err)
 		return -1, -1, err
 	}
 
@@ -298,10 +324,10 @@ func (dvc *AdbDevice) FindUINodeAndClick(resourceid, resourcetext string) (int, 
 
 	x, y, err := targetNode.MiddleXY()
 	if err != nil {
-		return -1, -1, fmt.Errorf("FindUINodeAndClick() can't find the target UI node MiddleXY(): %v", err)
+		return -1, -1, fmt.Errorf("findUINodeAndClick() can't find the target UI node MiddleXY(): %v", err)
 	}
 
-	return x, y, dvc.Click(x, y)
+	return x, y, dvc.clickUnsafe(x, y)
 }
 
 func (dvc *AdbDevice) findUINode(nodes []*AndroidUINode, resourceid, resourcetext string) *AndroidUINode {
@@ -437,21 +463,23 @@ func (dvc *AdbDevice) ListSysNotifies() []*AndroidSysNotify {
 
 // ClearSysNotifies implement AdbDeviceHandler
 func (dvc *AdbDevice) ClearSysNotifies() error {
-	// swipe down list notifies
-	dvc.SwipeDownShowNotify()
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+
+	dvc.swipeUnsafe(300, 0, 300, 1200) // pull down from top to show the notifies
 
 	// find the UI node and click it
 	var (
 		resourceid   = "com.android.systemui:id/clear_all_button"
 		resourcetext = ""
 	)
-	_, _, err := dvc.FindUINodeAndClick(resourceid, resourcetext)
+	_, _, err := dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
 	if err != nil {
 		if err == errUINodeNotFound {
 			log.Warnln("ClearSysNotifies() no system notifies need to be cleaned")
 			return nil
 		}
-		log.Errorln("ClearSysNotifies().FindUINodeAndClick() error:", err)
+		log.Errorln("ClearSysNotifies().findUINodeAndClick() error:", err)
 		return err
 	}
 
@@ -545,6 +573,9 @@ func (dvc *AdbDevice) StartAliPay() error {
 // AlipaySearchOrder implement AdbDeviceHandler
 // 我的 -> 账单 -> 搜索 -> 搜索
 func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
+	dvc.l.Lock()
+	defer dvc.l.Unlock()
+
 	if orderID == "" {
 		return nil, errors.New("AlipaySearchOrder() order id required")
 	}
@@ -567,7 +598,7 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 	// 点击账单列表页的'搜索'
 	// if we know the button XY, directly click it
 	if currX, currY := dvc.alipayBillListSearchButton[0], dvc.alipayBillListSearchButton[1]; currX > 0 && currY > 0 {
-		dvc.Click(currX, currY)
+		dvc.clickUnsafe(currX, currY)
 		// ensure we got the right activity, otherwise re-caculate the button XY and click it
 		err = dvc.waitAlipayBillSearchActive(5, time.Second)
 		if err != nil {
@@ -580,9 +611,9 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 	// caculate the button XY and click it
 	resourceid = "com.alipay.mobile.bill.list:id/search_btn"
 	resourcetext = "搜索"
-	newX, newY, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
+	newX, newY, err = dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
 	if err != nil {
-		log.Errorln("AlipaySearchOrder().FindUINodeAndClick() on `Bill-List-Search-Button` error:", err)
+		log.Errorln("AlipaySearchOrder().findUINodeAndClick() on `Bill-List-Search-Button` error:", err)
 		return nil, err
 	}
 	// ensure we got the right activity
@@ -601,7 +632,7 @@ EMITSEARCH:
 
 	// goback once afterwards to the alipay order list page
 	defer func() {
-		dvc.GoBack()
+		dvc.gobackUnsafe()
 		dvc.waitAlipayBillListActive(5, time.Second)
 	}()
 
@@ -613,13 +644,13 @@ EMITSEARCH:
 	// 点击账单搜索页的'搜索' 进行提交
 	// if we know the button XY, directly click it
 	if currX, currY := dvc.alipayBillSearchEmitButton[0], dvc.alipayBillSearchEmitButton[1]; currX > 0 && currY > 0 {
-		dvc.Click(currX, currY)
+		dvc.clickUnsafe(currX, currY)
 	} else { // caculate the button XY and click it
 		resourceid = ""
 		resourcetext = "搜索"
-		newX, newY, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
+		newX, newY, err = dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
 		if err != nil {
-			log.Errorln("AlipaySearchOrder().FindUINodeAndClick() on `Bill-Search-Emit-Button` error:", err)
+			log.Errorln("AlipaySearchOrder().findUINodeAndClick() on `Bill-Search-Emit-Button` error:", err)
 			return nil, err
 		}
 		if newX > 0 && newY > 0 {
@@ -629,9 +660,9 @@ EMITSEARCH:
 	}
 
 	// parse the search result page
-	nodes, err := dvc.DumpCurrentUI()
+	nodes, err := dvc.dumpCurrentUIUnsafe()
 	if err != nil {
-		log.Errorln("AlipaySearchOrder().DumpCurrentUI() on search result page error:", err)
+		log.Errorln("AlipaySearchOrder().dumpCurrentUI() on search result page error:", err)
 		return nil, err
 	}
 	// retry max 10 times if loading
@@ -639,7 +670,7 @@ EMITSEARCH:
 		loadingNode := dvc.findUINode(nodes, "android:id/progress", "") // 加载中
 		if loadingNode != nil {
 			time.Sleep(time.Second)
-			nodes, _ = dvc.DumpCurrentUI()
+			nodes, _ = dvc.dumpCurrentUIUnsafe()
 			continue
 		}
 		break
@@ -697,6 +728,27 @@ EMITSEARCH:
 	}, nil
 }
 
+func (dvc *AdbDevice) gotoAlipayListOrder() error {
+	if err := dvc.gotoAlipayTabProfile(); err != nil {
+		return err
+	}
+
+	time.Sleep(time.Millisecond * 300)
+
+	var (
+		resourceid   = "com.alipay.mobile.antui:id/item_left_text"
+		resourcetext = "账单"
+	)
+	_, _, err := dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
+	if err != nil {
+		log.Errorln("gotoAlipayListOrder().findUINodeAndClick() error:", err)
+		return err
+	}
+
+	// now we expect the bill list activity at top
+	return dvc.waitAlipayBillListActive(10, time.Second)
+}
+
 func (dvc *AdbDevice) gotoAlipayTabProfile() error {
 	if err := dvc.StartAliPay(); err != nil {
 		return err
@@ -719,39 +771,18 @@ RETRY:
 	}
 
 	dvc.StartAliPay() // ensure every time alipay at top
-	_, _, err = dvc.FindUINodeAndClick(resourceid, resourcetext)
+	_, _, err = dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)
 	if err != nil {
 		if err == errUINodeNotFound {
 			log.Warnln("gotoAlipayTabProfile() goback one step and retry to find the '我的' button ...")
 		} else {
-			log.Warnln("gotoAlipayTabProfile().FindUINodeAndClick error:", err)
+			log.Warnln("gotoAlipayTabProfile().findUINodeAndClick error:", err)
 		}
-		dvc.GoBack() // go back one step and retry
+		dvc.gobackUnsafe() // go back one step and retry
 		goto RETRY
 	}
 
 	return nil
-}
-
-func (dvc *AdbDevice) gotoAlipayListOrder() error {
-	if err := dvc.gotoAlipayTabProfile(); err != nil {
-		return err
-	}
-
-	time.Sleep(time.Millisecond * 300)
-
-	var (
-		resourceid   = "com.alipay.mobile.antui:id/item_left_text"
-		resourcetext = "账单"
-	)
-	_, _, err := dvc.FindUINodeAndClick(resourceid, resourcetext)
-	if err != nil {
-		log.Errorln("gotoAlipayListOrder().FindUINodeAndClick() error:", err)
-		return err
-	}
-
-	// now we expect the bill list activity at top
-	return dvc.waitAlipayBillListActive(10, time.Second)
 }
 
 func (dvc *AdbDevice) isAlipayActive() bool {

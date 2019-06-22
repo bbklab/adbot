@@ -22,8 +22,6 @@ type AdbDeviceHandler interface {
 	GoBack() error
 	Click(x, y int) error
 	Swipe(x1, y1, x2, y2 int) error
-	SwipeUpUnlock() error
-	SwipeDownShowNotify() error
 	CurrentTopActivity() (string, error)
 	DumpCurrentUI() ([]*AndroidUINode, error)
 	FindUINodeAndClick(resourceid, resourcetext string) (int, int, error)
