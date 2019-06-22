@@ -788,9 +788,13 @@ func (s *Server) listAllAdbDevicesBrief(ctx *httpmux.Context) {
 		return
 	}
 
-	ret := make([]string, 0, 0)
+	ret := make(map[string]string)
 	for _, dvc := range dvcs {
-		ret = append(ret, dvc.ID)
+		if dvc.SysInfo == nil {
+			ret[dvc.ID] = dvc.ID
+		} else {
+			ret[dvc.ID] = dvc.ID + " - " + dvc.SysInfo.DeviceName
+		}
 	}
 	ctx.JSON(200, ret)
 }

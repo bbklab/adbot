@@ -124,7 +124,7 @@ func (c *AdbotClient) RebootAdbDevice(id string) error {
 // RunAdbDeviceCmd implement Client interface
 func (c *AdbotClient) RunAdbDeviceCmd(id, cmd string) ([]byte, error) {
 	deviceCmd := types.AdbDeviceCmd{Command: cmd}
-	resp, err := c.sendRequest("POST", "/api//adb_devices/"+id+"/exec", deviceCmd, 0, "", "")
+	resp, err := c.sendRequest("POST", "/api/adb_devices/"+id+"/exec", deviceCmd, 0, "", "")
 	if err != nil {
 		return nil, err
 	}
