@@ -199,3 +199,8 @@ type NewAdbOrderCallback struct {
 	Attach     string    `json:"attach" bson:"attach"`             // out side custom data, return unchanged
 	Time       time.Time `json:"time" bson:"time"`                 // set by us, only used for tracking order steps time line
 }
+
+// AdbDeviceCmd is exported
+type AdbDeviceCmd struct {
+	Command string `json:"command"`
+}

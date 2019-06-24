@@ -42,7 +42,6 @@ func main() {
 	//  - awaken screen each time or
 	//  - modify the system settings to light on the screen always
 	dvc.AwakenScreen()
-	dvc.SwipeUpUnlock()
 	dvc.GotoHome()
 
 	// watch the system notifies
@@ -140,7 +139,6 @@ func testFull() {
 
 		// awaken and goto home
 		dvc.AwakenScreen()
-		dvc.SwipeUpUnlock()
 		dvc.GotoHome()
 
 		// clear system notify

@@ -98,6 +98,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c54b2df9eb45e238bca9d7f0e1a4acc90a2e6284e8d31c0df3ec72886ec53406"
+  name = "github.com/google/shlex"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c34317bd91bf98fab745d77b03933cf8769299fe"
+
+[[projects]]
+  branch = "master"
   digest = "1:46223f4c05549a4f57fe78cbe3348d905f0d91ae7ab8fa4ac1751281dfa52aac"
   name = "github.com/googollee/go-engine.io"
   packages = [
@@ -166,14 +174,6 @@
   pruneopts = "NUT"
   revision = "02e3cf038dcea8290e44424da473dd12be796a8a"
   version = "v1.0.3"
-
-[[projects]]
-  digest = "1:24b5f8d41224b90e3f4d22768926ed782a8ca481d945c0e064c8f165bf768280"
-  name = "github.com/miekg/dns"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "5a2b9fab83ff0f8bfc99684bd5f43a37abe560f1"
-  version = "v1.0.8"
 
 [[projects]]
   digest = "1:ea8780346eba74e5eb3e8b6bded2ec46c1c81cd745bc00e9964b730955bf4252"
@@ -287,16 +287,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f725870db296b0980693bba684bac9a981ef857dfa050c92a711598b95368fc2"
+  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
   name = "golang.org/x/net"
-  packages = [
-    "bpf",
-    "context",
-    "internal/iana",
-    "internal/socket",
-    "ipv4",
-    "ipv6",
-  ]
+  packages = ["context"]
   pruneopts = "NUT"
   revision = "f4c29de78a2a91c00474a2e689954305c350adf9"
 
@@ -383,11 +376,11 @@
     "github.com/docker/go-units",
     "github.com/felixge/tcpkeepalive",
     "github.com/go-telegram-bot-api/telegram-bot-api",
+    "github.com/google/shlex",
     "github.com/googollee/go-socket.io",
     "github.com/gorilla/securecookie",
     "github.com/gorilla/websocket",
     "github.com/kr/pty",
-    "github.com/miekg/dns",
     "github.com/oschwald/geoip2-golang",
     "github.com/oschwald/maxminddb-golang",
     "github.com/robfig/cron",

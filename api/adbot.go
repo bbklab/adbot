@@ -234,6 +234,32 @@ func (s *Server) rebootAdbDevice(ctx *httpmux.Context) {
 	ctx.Status(200)
 }
 
+func (s *Server) execCmdAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	var deviceCmd = new(types.AdbDeviceCmd)
+	if err := ctx.Bind(deviceCmd); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	bs, err := scheduler.DoNodeAdbDeviceExec(dvc.NodeID, dvc.ID, deviceCmd)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Text(200, string(bs))
+}
+
 func (s *Server) setAdbDeviceBill(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]
@@ -762,9 +788,13 @@ func (s *Server) listAllAdbDevicesBrief(ctx *httpmux.Context) {
 		return
 	}
 
-	ret := make([]string, 0, 0)
+	ret := make(map[string]string)
 	for _, dvc := range dvcs {
-		ret = append(ret, dvc.ID)
+		if dvc.SysInfo == nil {
+			ret[dvc.ID] = dvc.ID
+		} else {
+			ret[dvc.ID] = dvc.ID + " - " + dvc.SysInfo.DeviceName
+		}
 	}
 	ctx.JSON(200, ret)
 }

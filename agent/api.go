@@ -288,3 +288,28 @@ func (agent *Agent) rebootAdbDevice(ctx *httpmux.Context) {
 
 	ctx.Status(200)
 }
+
+func (agent *Agent) runAdbDeviceCmd(ctx *httpmux.Context) {
+	var (
+		dvcID     = ctx.Query["device_id"]
+		deviceCmd = new(types.AdbDeviceCmd)
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	if err := ctx.Bind(deviceCmd); err != nil {
+		ctx.BadRequest(err)
+		return
+	}
+
+	bs, err := extensions.RunAdbDeviceCmd(dvcID, deviceCmd.Command)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Text(200, string(bs))
+}

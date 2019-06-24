@@ -50,6 +50,7 @@ type Client interface {
 	InspectAdbDevice(id string) (*types.AdbDeviceWrapper, error)
 	ScreenCapAdbDevice(id string) ([]byte, error)
 	RebootAdbDevice(id string) error
+	RunAdbDeviceCmd(id, cmd string) ([]byte, error)
 	SetAdbDeviceBill(id string, val int) error
 	SetAdbDeviceAmount(id string, val int) error
 	SetAdbDeviceWeight(id string, val int) error

@@ -121,6 +121,23 @@ func (c *AdbotClient) RebootAdbDevice(id string) error {
 	return nil
 }
 
+// RunAdbDeviceCmd implement Client interface
+func (c *AdbotClient) RunAdbDeviceCmd(id, cmd string) ([]byte, error) {
+	deviceCmd := types.AdbDeviceCmd{Command: cmd}
+	resp, err := c.sendRequest("POST", "/api/adb_devices/"+id+"/exec", deviceCmd, 0, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, &APIError{code, string(bs)}
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 // SetAdbDeviceBill implement Client interface
 func (c *AdbotClient) SetAdbDeviceBill(id string, val int) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/api/adb_devices/%s/bill?val=%d", id, val), nil, 0, "", "")

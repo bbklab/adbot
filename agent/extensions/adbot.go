@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/google/shlex"
 
 	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/routine"
@@ -187,7 +188,6 @@ func (mgr *adbMgr) watchAllDeviceAlipayActivity() {
 
 				if !dvc.IsAwake() {
 					dvc.AwakenScreen()
-					// dvc.SwipeUpUnlock() // note: this require the adb device must disabled the screen lock via USB Debug Options
 				}
 
 				if activity, _ := dvc.CurrentTopActivity(); !strings.Contains(activity, "com.eg.android.AlipayGphone") {
@@ -269,8 +269,6 @@ func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
 		if err != nil {
 			return nil, err
 		}
-		dvc.SwipeUpUnlock()
-		dvc.GotoHome()
 	}
 
 	return dvc.AlipaySearchOrder(orderID)
@@ -307,4 +305,23 @@ func AdbDeviceReboot(dvcID string) error {
 	})
 
 	return nil
+}
+
+// RunAdbDeviceCmd run command on device adb device
+func RunAdbDeviceCmd(dvcID, cmd string) ([]byte, error) {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return nil, err
+	}
+
+	command, err := shlex.Split(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("bad command: %v", err)
+	}
+	if len(command) == 0 {
+		return nil, fmt.Errorf("bad command: null")
+	}
+
+	out, err := dvc.Run(command[0], command[1:]...)
+	return []byte(out), err
 }

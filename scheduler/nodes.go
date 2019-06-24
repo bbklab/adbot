@@ -206,6 +206,25 @@ func DoNodeRebootAdbDevice(id, dvcid string) error {
 	return nil
 }
 
+// DoNodeAdbDeviceExec exec remote adb device cmd and redirect live stream cmd output
+func DoNodeAdbDeviceExec(id, dvcid string, cmd *types.AdbDeviceCmd) ([]byte, error) {
+	cmdbs, _ := json.Marshal(cmd)
+	nodeReq, _ := http.NewRequest("POST", fmt.Sprintf("http://%s/api/adbot/device/exec?device_id=%s", id, dvcid), bytes.NewBuffer(cmdbs))
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 //
 // Terminal
 //
