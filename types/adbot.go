@@ -191,7 +191,6 @@ func (r *NewAdbOrderReq) Valid() error {
 type NewAdbOrderResp struct {
 	Code       int       `json:"code" bson:"code"`                 // 1:success  0:error
 	Message    string    `json:"message" bson:"message"`           // error message while Code==1
-	QRText     string    `json:"qrtext" bson:"qrtext"`             // qrcode raw text
 	QRImage    string    `json:"qrimage" bson:"-"`                 // qrcode png base64: data:image/png;base64,{xxxx}  (note: ignore mgo db save)
 	OrderID    string    `json:"order_id" bson:"order_id"`         // adbot order id
 	OutOrderID string    `json:"out_order_id" bson:"out_order_id"` // copy from Req.OutOrderID
@@ -206,6 +205,7 @@ type NewAdbOrderCallback struct {
 	OutOrderID string    `json:"out_order_id" bson:"out_order_id"` // out side order id
 	Fee        int       `json:"fee" bson:"fee"`                   // order fee
 	Attach     string    `json:"attach" bson:"attach"`             // out side custom data, return unchanged
+	Sign       string    `json:"sign" bson:"sign"`                 // set by us, used for receiver verify this callback to prevent any fake callbacks
 	Time       time.Time `json:"time" bson:"time"`                 // set by us, only used for tracking order steps time line
 }
 

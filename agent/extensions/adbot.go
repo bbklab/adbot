@@ -337,7 +337,7 @@ func AdbDeviceDumpUINodes(dvcID string) ([]*adbot.AndroidUINode, error) {
 // AdbDeviceClick click device on give X,Y
 func AdbDeviceClick(dvcID string, x, y int) error {
 	if err := setupAdbotMgr(); err != nil {
-		return nil, err
+		return err
 	}
 
 	dvc, err := am.getDevice(dvcID)
@@ -350,7 +350,7 @@ func AdbDeviceClick(dvcID string, x, y int) error {
 // AdbDeviceGoback tap device back key
 func AdbDeviceGoback(dvcID string) error {
 	if err := setupAdbotMgr(); err != nil {
-		return nil, err
+		return err
 	}
 
 	dvc, err := am.getDevice(dvcID)
@@ -363,7 +363,7 @@ func AdbDeviceGoback(dvcID string) error {
 // AdbDeviceGotoHome tap device home key
 func AdbDeviceGotoHome(dvcID string) error {
 	if err := setupAdbotMgr(); err != nil {
-		return nil, err
+		return err
 	}
 
 	dvc, err := am.getDevice(dvcID)
@@ -376,7 +376,7 @@ func AdbDeviceGotoHome(dvcID string) error {
 // AdbDeviceReboot reboot given adb device
 func AdbDeviceReboot(dvcID string) error {
 	if err := setupAdbotMgr(); err != nil {
-		return nil, err
+		return err
 	}
 
 	dvc, err := am.getDevice(dvcID)

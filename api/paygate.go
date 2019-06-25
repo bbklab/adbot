@@ -23,7 +23,6 @@ func (s *Server) payGateNewAdbOrder(ctx *httpmux.Context) {
 		req     = new(types.NewAdbOrderReq)
 		resp    = new(types.NewAdbOrderResp)
 		dvc     *types.AdbDevice
-		qrtext  string
 		qrpng   []byte
 		orderID string
 		query   bson.M
@@ -77,7 +76,7 @@ func (s *Server) payGateNewAdbOrder(ctx *httpmux.Context) {
 	}
 
 	// ask generate qrcode and return response
-	qrpng, qrtext, err = scheduler.GenAdbpayQrCode(dvc.ID, req.QRType, req.Fee, orderID)
+	qrpng, _, err = scheduler.GenAdbpayQrCode(dvc.ID, req.QRType, req.Fee, orderID)
 	if err != nil {
 		// note: after db order created, if we met error while generating qrcode,
 		// we should remove the newly db order and tell outside to retry.
@@ -93,7 +92,6 @@ END:
 		resp.Message = err.Error()
 	} else {
 		resp.Code = 1
-		resp.QRText = qrtext
 		resp.QRImage = fmt.Sprintf("data:image/png;base64,%s", base64.StdEncoding.EncodeToString(qrpng))
 	}
 	resp.OrderID = orderID

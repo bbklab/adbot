@@ -154,11 +154,21 @@ func genCallbackOfAdbOrder(order *types.AdbOrder) (*types.NewAdbOrderCallback, e
 	if order.Status != types.AdbOrderStatusPaid {
 		return nil, errors.New("can't generate callback for `un-paid` order")
 	}
+
+	settings, err := store.DB().GetSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	key := settings.GlobalAttrs.Get(types.GlobalAttrPaygateSecretKey)
+	sign := sign(key, fmt.Sprintf("out_order_id=%s&fee=%d", order.OutOrderID, order.Fee))
+
 	return &types.NewAdbOrderCallback{
 		Code:       1,
 		OutOrderID: order.OutOrderID,
 		Fee:        order.Fee,
 		Attach:     order.Attach,
+		Sign:       sign,
 		Time:       time.Now(),
 	}, nil
 }
