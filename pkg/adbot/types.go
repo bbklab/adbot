@@ -177,13 +177,13 @@ func parseAndroidBatteryInfo(text string) *AndroidBatteryInfo {
 
 // AndroidUINode is exported
 type AndroidUINode struct {
-	Index       string // 4
-	Text        string // 手机电池已充满(100%)
-	ResourceID  string // com.android.systemui:id/clear_all_button
-	Package     string // com.android.systemui
-	ContentDesc string // 清除所有通知。
-	Bounds      string // [301,1138][419,1256]
-	XY          [2]int // MiddleXY() of UINode
+	Index       string `json:"index"`        // 4
+	Text        string `json:"text"`         // 手机电池已充满(100%)
+	ResourceID  string `json:"resource_id"`  // com.android.systemui:id/clear_all_button
+	Package     string `json:"package"`      // com.android.systemui
+	ContentDesc string `json:"content_desc"` // 清除所有通知。
+	Bounds      string `json:"bounds"`       // [301,1138][419,1256]
+	XY          [2]int `json:"xy"`           // MiddleXY() of UINode
 }
 
 // MiddleXY is exported
