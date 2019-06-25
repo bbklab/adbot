@@ -468,4 +468,4 @@ Query Parameters:
 
 
 ### Remove
-> TODO
+`DELETE /api/adb_devices/{device_id}`  -  remove adb device
