@@ -54,6 +54,14 @@ type AdbDevice struct {
 	Wxpay     *WxpayAccount         `json:"wxpay" bson:"wxpay"`           // binded wxpay account
 }
 
+// Name is exported
+func (d *AdbDevice) Name() string {
+	if d.SysInfo == nil {
+		return d.ID
+	}
+	return d.SysInfo.DeviceName
+}
+
 // WeightN implement balancer.Item
 func (d *AdbDevice) WeightN() int {
 	return d.Weight
@@ -105,7 +113,8 @@ var (
 // AdbOrderWrapper is exported
 type AdbOrderWrapper struct {
 	*AdbOrder
-	FeeYuan float64 `json:"fee_yuan"`
+	DeviceName string  `json:"device_name"`
+	FeeYuan    float64 `json:"fee_yuan"`
 }
 
 // AdbOrder is a db adb order

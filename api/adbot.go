@@ -769,9 +769,15 @@ func (s *Server) wrapAdbDevice(dvc *types.AdbDevice) *types.AdbDeviceWrapper {
 }
 
 func (s *Server) wrapAdbOrder(o *types.AdbOrder) *types.AdbOrderWrapper {
+	var dvcname string
+	dvc, _ := store.DB().GetAdbDevice(o.DeviceID)
+	if dvc != nil {
+		dvcname = dvc.Name()
+	}
 	return &types.AdbOrderWrapper{
-		AdbOrder: o,
-		FeeYuan:  float64(o.Fee) / float64(100),
+		AdbOrder:   o,
+		DeviceName: dvcname,
+		FeeYuan:    float64(o.Fee) / float64(100),
 	}
 }
 
@@ -790,11 +796,7 @@ func (s *Server) listAllAdbDevicesBrief(ctx *httpmux.Context) {
 
 	ret := make(map[string]string)
 	for _, dvc := range dvcs {
-		if dvc.SysInfo == nil {
-			ret[dvc.ID] = dvc.ID
-		} else {
-			ret[dvc.ID] = dvc.ID + " - " + dvc.SysInfo.DeviceName
-		}
+		ret[dvc.ID] = dvc.ID + " - " + dvc.Name()
 	}
 	ctx.JSON(200, ret)
 }
