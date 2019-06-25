@@ -10,6 +10,7 @@ type AdbHandler interface {
 // AdbDeviceHandler represents one specified adb device handler
 type AdbDeviceHandler interface {
 	Serial() (string, error)
+	Exists() bool
 	Online() bool
 	Reboot() error
 	Run(cmd string, args ...string) (string, error) // similar as: adb -s {id} shell

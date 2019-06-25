@@ -102,6 +102,15 @@ func (dvc *AdbDevice) Serial() (string, error) {
 	return dvc.h.Serial()
 }
 
+// Exists implement AdbDeviceHandler
+func (dvc *AdbDevice) Exists() bool {
+	_, err := dvc.h.DeviceInfo()
+	if err == nil {
+		return true
+	}
+	return !strings.HasPrefix(err.Error(), "DeviceNotFound")
+}
+
 // Online implement AdbDeviceHandler
 func (dvc *AdbDevice) Online() bool {
 	state, err := dvc.h.State()
@@ -453,8 +462,10 @@ func (dvc *AdbDevice) ListSysNotifies() []*AndroidSysNotify {
 	for _, lbs := range ret {
 		title := lbs.Get("_TITLE_")
 		text := lbs.Get("tickerText")
+		pkg, id := parseSysNotifyTitle(title)
 		notifies = append(notifies, &AndroidSysNotify{
-			Source:  parseSysNotifyFromPKG(title),
+			ID:      id,
+			Source:  pkg,
 			Message: text,
 		})
 	}
@@ -465,7 +476,10 @@ func (dvc *AdbDevice) ListSysNotifies() []*AndroidSysNotify {
 func (dvc *AdbDevice) ClearSysNotifies() error {
 	dvc.l.Lock()
 	defer dvc.l.Unlock()
+	return dvc.clearSysNotifiesUnsafe()
+}
 
+func (dvc *AdbDevice) clearSysNotifiesUnsafe() error {
 	dvc.swipeUnsafe(300, 0, 300, 1200) // pull down from top to show the notifies
 
 	// find the UI node and click it
@@ -578,6 +592,11 @@ func (dvc *AdbDevice) AlipaySearchOrder(orderID string) (*AlipayOrder, error) {
 
 	if orderID == "" {
 		return nil, errors.New("AlipaySearchOrder() order id required")
+	}
+
+	// clear any previous alipay notifies
+	if n := dvc.countAlipayNotifies(); n > 3 {
+		dvc.clearSysNotifiesUnsafe()
 	}
 
 	// ensure current top activity is alipay bill list page
@@ -726,6 +745,17 @@ EMITSEARCH:
 		Amount:  billAmount,
 		Time:    billTime1 + "-" + billTime2,
 	}, nil
+}
+
+func (dvc *AdbDevice) countAlipayNotifies() int {
+	notifies := dvc.ListSysNotifies()
+	var n int
+	for _, notify := range notifies {
+		if notify.Source == "com.eg.android.AlipayGphone" {
+			n++
+		}
+	}
+	return n
 }
 
 func (dvc *AdbDevice) gotoAlipayListOrder() error {

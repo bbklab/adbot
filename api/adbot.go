@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -858,7 +859,7 @@ func (s *Server) wrapAdbDevice(dvc *types.AdbDevice) *types.AdbDeviceWrapper {
 	if total == 0 {
 		wrap.TodayPaidRate = float64(0)
 	} else {
-		wrap.TodayPaidRate = float64(paid*100) / float64(total)
+		wrap.TodayPaidRate = math.Round(float64(paid*100) / float64(total))
 	}
 
 	return wrap

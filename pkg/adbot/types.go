@@ -260,13 +260,14 @@ func parseAndroidUINodes(xmldata []byte) ([]*AndroidUINode, error) {
 
 // AndroidSysNotify is exported
 type AndroidSysNotify struct {
+	ID      string `json:"id"`
 	Source  string `json:"source"`  // source: om.android.mms, com.android.calendar
 	Message string `json:"message"` // ayy text messages ...
 }
 
 // EqualsTo is exported
 func (n *AndroidSysNotify) EqualsTo(new *AndroidSysNotify) bool {
-	return n.Source == new.Source && n.Message == new.Message
+	return n.ID == new.ID && n.Source == new.Source && n.Message == new.Message
 }
 
 // AlipayOrder is exported
@@ -335,13 +336,19 @@ func parseSectionText(text string, rxTitle *regexp.Regexp, keys []string) ([]lab
 	return label.Uniq(ret), nil
 }
 
-// parse notification title from string like:
+// parse notification pkg/id from string like:
 //   NotificationRecord(0x4270cd28: pkg=com.tencent.mm user=UserHandle{0} id=1363572628 tag=null score=10: Notification(pri=1 contentView=com.tencent.mm/0x1090065 ...
-func parseSysNotifyFromPKG(sysNotifyTitle string) string {
+func parseSysNotifyTitle(sysNotifyTitle string) (string, string) {
+	var pkg, id string
 	for _, kv := range strings.Fields(sysNotifyTitle) {
 		if strings.HasPrefix(kv, "pkg=") {
-			return strings.TrimPrefix(kv, "pkg=")
+			pkg = strings.TrimPrefix(kv, "pkg=")
+			continue
+		}
+		if strings.HasPrefix(kv, "id=") {
+			id = strings.TrimPrefix(kv, "id=")
+			continue
 		}
 	}
-	return ""
+	return pkg, id
 }
