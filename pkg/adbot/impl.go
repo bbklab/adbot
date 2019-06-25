@@ -470,7 +470,7 @@ func (dvc *AdbDevice) ClearSysNotifies() error {
 
 	// find the UI node and click it
 	var (
-		resourceid   = "com.android.systemui:id/clear_all_button"
+		resourceid   = "com.android.systemui:id/dismiss_view"
 		resourcetext = ""
 	)
 	_, _, err := dvc.findUINodeAndClickUnsafe(resourceid, resourcetext)

@@ -231,6 +231,15 @@ func (s *Server) dumpAdbDeviceUINodes(ctx *httpmux.Context) {
 		return
 	}
 
+	var idx int
+	for _, node := range uinodes {
+		if node.Text != "" || node.ContentDesc != "" {
+			uinodes[idx] = node
+			idx++
+		}
+	}
+	uinodes = uinodes[:idx]
+
 	ctx.JSON(200, uinodes)
 }
 
