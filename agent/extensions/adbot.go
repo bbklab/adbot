@@ -69,13 +69,26 @@ func (mgr *adbMgr) getDevice(id string) (adbot.AdbDeviceHandler, error) {
 
 	// launch new device alipay watcher
 	if !mgr.reg.ExistsRoutine("adb_device_alipay_watcher", id) {
-		go mgr.watchDeviceAlipay(newdh, id)
+		go mgr.watchDeviceAlipay(id)
 	}
 
 	return newdh, nil
 }
 
-func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
+func (mgr *adbMgr) rmDevice(id string) {
+	mgr.Lock()
+	delete(mgr.dhs, id)
+	mgr.Unlock()
+}
+
+func (mgr *adbMgr) watchDeviceAlipay(id string) {
+	dvc, err := mgr.getDevice(id)
+	if err != nil {
+		log.Errorln("get adb device handler error", id, err)
+		return
+	}
+	defer mgr.rmDevice(id)
+
 	var (
 		loopName = fmt.Sprintf("device %s alipay order watcher loop", id)
 	)
@@ -86,8 +99,11 @@ func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
 	mgr.reg.AddRoutine("adb_device_alipay_watcher", id)
 	defer mgr.reg.DelRoutine("adb_device_alipay_watcher", id)
 
-	ticker := time.NewTicker(time.Second * 60)
-	defer ticker.Stop()
+	noopTicker := time.NewTicker(time.Second * 60) // timer to report noop alipay order event
+	defer noopTicker.Stop()
+
+	existTicker := time.NewTicker(time.Second * 5) // timer to check device exists
+	defer existTicker.Stop()
 
 	ch, stopch := dvc.WatchSysNotifies()
 	defer close(stopch)
@@ -113,7 +129,7 @@ func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
 			}
 			err = reportAdbEvent(ev)
 
-		case <-ticker.C:
+		case <-noopTicker.C:
 			msg = "NOOP ALIPAY EVENT IN CASE OF MISSING SYSNOTIFY"
 			ev := &adbot.AdbEvent{
 				Serial:  id,
@@ -122,12 +138,20 @@ func (mgr *adbMgr) watchDeviceAlipay(dvc adbot.AdbDeviceHandler, id string) {
 				Time:    time.Now(),
 			}
 			err = reportAdbEvent(ev)
+
+		case <-existTicker.C:
+			if !dvc.Exists() {
+				log.Warnf("%s find device lost, exit the loop", loopName)
+				return
+			}
+			continue
+
 		}
 
 		if err != nil {
-			log.Warnf("report alipay order event to master error: %v - [%s]", err, msg)
+			log.Warnf("%s report alipay order event to master error: %v - [%s]", loopName, err, msg)
 		} else {
-			log.Infof("report alipay order event to master succeed - [%s]", msg)
+			log.Infof("%s report alipay order event to master succeed - [%s]", loopName, msg)
 		}
 	}
 }
@@ -149,9 +173,15 @@ func (mgr *adbMgr) watchAllDeviceEvents() {
 
 	for ev := range ch {
 		if err := reportAdbEvent(ev); err != nil {
-			log.Warnf("report adb device event to master error: %v - [%s]", err, ev.Message)
+			log.Warnf("report adb device %s event to master error: %v - [%s]", ev.Serial, err, ev.Message)
 		} else {
-			log.Infof("report adb device event to master succeed - [%s]", ev.Message)
+			log.Infof("report adb device %s event to master succeed - [%s]", ev.Serial, ev.Message)
+		}
+
+		if ev.Type == adbot.AdbEventDeviceAlive { // ensure device alipay watcher running
+			if !mgr.reg.ExistsRoutine("adb_device_alipay_watcher", ev.Serial) {
+				go mgr.watchDeviceAlipay(ev.Serial)
+			}
 		}
 	}
 }
