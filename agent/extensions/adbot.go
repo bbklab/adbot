@@ -283,6 +283,24 @@ func AdbDeviceScreenCap(dvcID string) ([]byte, error) {
 	return dvc.ScreenCap()
 }
 
+// AdbDeviceDumpUINodes dump current android ui nodes
+func AdbDeviceDumpUINodes(dvcID string) ([]*adbot.AndroidUINode, error) {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return nil, err
+	}
+	return dvc.DumpCurrentUI()
+}
+
+// AdbDeviceClick click device on give X,Y
+func AdbDeviceClick(dvcID string, x, y int) error {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return err
+	}
+	return dvc.Click(x, y)
+}
+
 // AdbDeviceReboot reboot given adb device
 func AdbDeviceReboot(dvcID string) error {
 	dvc, err := am.getDevice(dvcID)

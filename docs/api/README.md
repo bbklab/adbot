@@ -24,6 +24,8 @@
     + [解绑支付宝账户](/docs/api/adbdevice.md#revoke-alipay)
     + [扫码测试设备收款](/docs/api/adbdevice.md#verify)
     + [设备屏幕截图](/docs/api/adbdevice.md#screencap)
+    + [设备界面元素](/docs/api/adbdevice.md#uinodes)
+    + [设备坐标点击](/docs/api/adbdevice.md#click)
     + [设备重启](/docs/api/adbdevice.md#reboot)
     + [删除](/docs/api/adbdevice.md#remove)
   - [订单](/docs/api/adborder.md)

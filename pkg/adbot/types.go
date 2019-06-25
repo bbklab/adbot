@@ -183,6 +183,7 @@ type AndroidUINode struct {
 	Package     string // com.android.systemui
 	ContentDesc string // 清除所有通知。
 	Bounds      string // [301,1138][419,1256]
+	XY          [2]int // MiddleXY() of UINode
 }
 
 // MiddleXY is exported
@@ -241,14 +242,17 @@ func parseAndroidUINodes(xmldata []byte) ([]*AndroidUINode, error) {
 				lbs.Set(key, val)
 			}
 		}
-		ret = append(ret, &AndroidUINode{ // here we only pick up the fields we want
+		uinode := &AndroidUINode{ // here we only pick up the fields we want
 			Index:       lbs.Get("index"),
 			Text:        lbs.Get("text"),
 			ResourceID:  lbs.Get("resource-id"),
 			Package:     lbs.Get("package"),
 			ContentDesc: lbs.Get("content-desc"),
 			Bounds:      lbs.Get("bounds"),
-		})
+		}
+		x, y, _ := uinode.MiddleXY()
+		uinode.XY = [2]int{x, y}
+		ret = append(ret, uinode)
 	}
 
 	return ret, nil

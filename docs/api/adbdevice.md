@@ -201,6 +201,262 @@ Query Parameters:
 ### ScreenCap
 `GET /api/adb_devices/{device_id}/screencap`  -  get screencap image on adb device
 
+### UINodes
+`GET /api/adb_devices/{device_id}/uinodes`  -  get current ui nodes of adb device
+
+Example Response:
+```json
+[
+  {
+    "Index": "0",
+    "Text": "我的",
+    "ResourceID": "com.alipay.mobile.antui:id/title_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[31,72][103,121]",
+    "XY": [
+      67,
+      96
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "设置",
+    "ResourceID": "",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[617,72][689,122]",
+    "XY": [
+      653,
+      97
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "bbk-ng",
+    "ResourceID": "com.alipay.android.phone.wealth.home:id/user_name_left",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[166,145][287,193]",
+    "XY": [
+      226,
+      169
+    ]
+  },
+  {
+    "Index": "1",
+    "Text": "bbklab@qq.com",
+    "ResourceID": "com.alipay.android.phone.wealth.home:id/user_account",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[166,205][410,249]",
+    "XY": [
+      288,
+      227
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "支付宝会员",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,301][284,357]",
+    "XY": [
+      204,
+      329
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "堆堆乐复活卡限时兑",
+    "ResourceID": "com.alipay.mobile.antui:id/list_right_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[304,310][609,348]",
+    "XY": [
+      456,
+      329
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "账单",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,409][188,465]",
+    "XY": [
+      156,
+      437
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "总资产",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,501][220,557]",
+    "XY": [
+      172,
+      529
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "余额",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,593][188,649]",
+    "XY": [
+      156,
+      621
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "0.01 元",
+    "ResourceID": "com.alipay.mobile.antui:id/list_right_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[208,602][649,640]",
+    "XY": [
+      428,
+      621
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "余额宝",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,685][220,741]",
+    "XY": [
+      172,
+      713
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "银行卡",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,777][220,833]",
+    "XY": [
+      172,
+      805
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "芝麻信用",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,885][252,941]",
+    "XY": [
+      188,
+      913
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "蚂蚁保险",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,977][252,1033]",
+    "XY": [
+      188,
+      1005
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "网商银行",
+    "ResourceID": "com.alipay.mobile.antui:id/item_left_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[124,1069][252,1125]",
+    "XY": [
+      188,
+      1097
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "首页",
+    "ResourceID": "com.alipay.android.phone.openplatform:id/tab_description",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[45,1186][98,1266]",
+    "XY": [
+      71,
+      1226
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "财富",
+    "ResourceID": "com.alipay.android.widget.fortunehome:id/tab_description",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[189,1186][242,1266]",
+    "XY": [
+      215,
+      1226
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "口碑",
+    "ResourceID": "com.alipay.android.phone.discovery.o2ohome:id/tab_description",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[333,1186][386,1266]",
+    "XY": [
+      359,
+      1226
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "朋友",
+    "ResourceID": "com.alipay.mobile.socialwidget:id/social_tab_text",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[477,1186][530,1266]",
+    "XY": [
+      503,
+      1226
+    ]
+  },
+  {
+    "Index": "0",
+    "Text": "我的",
+    "ResourceID": "com.alipay.android.phone.wealth.home:id/tab_description",
+    "Package": "com.eg.android.AlipayGphone",
+    "ContentDesc": "",
+    "Bounds": "[621,1186][674,1266]",
+    "XY": [
+      647,
+      1226
+    ]
+  }
+]
+```
+
+### Click
+`PATCH /api/adb_devices/{device_id}/click`  -  click adb device UI Coordinate
+
+Query Parameters:
+  - **x**    - must: Coordinate X value
+  - **y**    - must: Coordinate Y value
+
 ### Reboot
 `PATCH /api/adb_devices/{device_id}/reboot`  -  reboot node adb device
 

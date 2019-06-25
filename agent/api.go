@@ -270,6 +270,59 @@ func (agent *Agent) screenCapAdbDevice(ctx *httpmux.Context) {
 	ctx.Res.Write(imgbs)
 }
 
+func (agent *Agent) dumpAdbDeviceUINodes(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	uinodes, err := extensions.AdbDeviceDumpUINodes(dvcID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	var idx int
+	for _, node := range uinodes {
+		if node.Text != "" || node.ContentDesc != "" {
+			uinodes[idx] = node
+			idx++
+		}
+	}
+	uinodes = uinodes[:idx]
+
+	ctx.JSON(200, uinodes)
+}
+
+func (agent *Agent) clickAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+		x, _  = strconv.Atoi(ctx.Query["x"])
+		y, _  = strconv.Atoi(ctx.Query["y"])
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+	if x <= 0 || y <= 0 {
+		ctx.BadRequest("bad X,Y value")
+		return
+	}
+
+	err := extensions.AdbDeviceClick(dvcID, x, y)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
 func (agent *Agent) rebootAdbDevice(ctx *httpmux.Context) {
 	var (
 		dvcID = ctx.Query["device_id"]

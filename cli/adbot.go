@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -37,10 +38,14 @@ var (
 	AdbNodeTableLine = "{{.Node.ID}}\t" + AdbNodeTableStatus + "\t" + AdbNodeTableHostname + "\t" + "{{hostof .Node.RemoteAddr}}\t" + AdbNodeGeoInfo + "\t" + AdbNodeTableDevice + "\t\n"
 
 	// adb device
-	AdbDeviceTableHeader  = "DEVICE ID\tNODE ID\t" + color.Yellow("STATUS") + "\tWEIGHT\tBILL\tAMOUNT\tRATE\tMANUFACTURER & MODEL\tANDROID VERSION\tBATTERY\tBOOT AT\t\n"
+	AdbDeviceTableHeader  = "DEVICE ID\tDEVICE NAME\tNODE ID\t" + color.Yellow("STATUS") + "\tWEIGHT\tBILL\tAMOUNT\tRATE\tMANUFACTURER & MODEL\tANDROID VERSION\tBATTERY\tBOOT AT\t\n"
 	AdbDeviceTableStatus  = "{{if eq .Status \"online\"}}{{green .Status}}{{else}}{{red .Status}}{{end}}"
 	AdbDeviceTableBattery = "{{$level := multiply .SysInfo.Battery.Level 100}}{{divide $level .SysInfo.Battery.Scale 0}}%" // (100*level/scale)%
-	AdbDeviceTableLine    = "{{.ID}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.RecentAdbOrders.Today.Paid}}/{{.MaxBill}}\t{{.RecentAdbOrders.Today.PaidBill}}/{{.MaxAmountYuan}}\t{{.TodayPaidRate}}%\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
+	AdbDeviceTableLine    = "{{.ID}}\t{{.SysInfo.DeviceName}}\t{{.NodeID}}\t" + AdbDeviceTableStatus + "\t{{.Weight}}\t{{.RecentAdbOrders.Today.Paid}}/{{.MaxBill}}\t{{.RecentAdbOrders.Today.PaidBill}}/{{.MaxAmountYuan}}\t{{.TodayPaidRate}}%\t{{.SysInfo.Manufacturer}} - {{.SysInfo.ProductModel}}\t{{.SysInfo.ReleaseVersion}} - SDK{{.SysInfo.SDKVersion}}\t" + AdbDeviceTableBattery + "\t{{tformat .SysInfo.BootTimeAt}}\t\n"
+
+	// adb device ui nodes
+	AdbDeviceUINodeTableHeader = "PACKAGE\tRESOURCE ID\tTEXT\tCONTENT DESC\tBOUNDS\tXY\t\n"
+	AdbDeviceUINodeTableLine   = "{{.Package}}\t{{.ResourceID}}\t{{.Text}}\t{{.ContentDesc}}\t{{.Bounds}}\t{{.XY}}\t\n"
 )
 
 var (
@@ -48,6 +53,17 @@ var (
 		cli.BoolFlag{
 			Name:  "quiet,q",
 			Usage: "only display numeric IDs",
+		},
+	}
+
+	clickAdbDeviceFlags = []cli.Flag{
+		cli.IntFlag{
+			Name:  "x",
+			Usage: "Coordinate X",
+		},
+		cli.IntFlag{
+			Name:  "y",
+			Usage: "Coordinate Y",
 		},
 	}
 
@@ -142,6 +158,8 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceListCommand(),         // ls
 			adbDeviceInspectCommand(),      // inspect
 			adbDeviceScreenCapCommand(),    // screencap
+			adbDeviceDumpUICommand(),       // dumpui
+			adbDeviceClickCommand(),        // click
 			adbDeviceRebootCommand(),       // reboot
 			adbDeviceExecCommand(),         // exec
 			adbDeviceSetBillCommand(),      // set-bill
@@ -186,6 +204,25 @@ func adbDeviceScreenCapCommand() cli.Command {
 		Usage:     "take screencap on an adb device",
 		ArgsUsage: "DEVICE",
 		Action:    screenCapAdbDevice,
+	}
+}
+
+func adbDeviceDumpUICommand() cli.Command {
+	return cli.Command{
+		Name:      "dumpui",
+		Usage:     "dump ui nodes on an adb device",
+		ArgsUsage: "DEVICE",
+		Action:    dumpUIAdbDevice,
+	}
+}
+
+func adbDeviceClickCommand() cli.Command {
+	return cli.Command{
+		Name:      "click",
+		Usage:     "click adb device's UI Coordinate",
+		ArgsUsage: "DEVICE",
+		Flags:     clickAdbDeviceFlags,
+		Action:    clickAdbDevice,
 	}
 }
 
@@ -466,6 +503,68 @@ func screenCapAdbDevice(c *cli.Context) error {
 	}
 
 	os.Stdout.Write(append([]byte("screencap.png"), '\r', '\n'))
+	return nil
+}
+
+func dumpUIAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	uinodes, err := client.DumpAdbDeviceUINodes(dvcID)
+	if err != nil {
+		return err
+	}
+
+	var (
+		w         = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
+		parser, _ = template.NewParser(AdbDeviceUINodeTableLine)
+	)
+
+	fmt.Fprint(w, AdbDeviceUINodeTableHeader)
+	for _, node := range uinodes {
+		parser.Execute(w, node)
+	}
+	w.Flush()
+
+	return nil
+}
+
+func clickAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+		x     = c.Int("x")
+		y     = c.Int("y")
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	if x <= 0 || y <= 0 {
+		return errors.New("bad XY value")
+	}
+
+	err = client.ClickAdbDevice(dvcID, x, y)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
 	return nil
 }
 
