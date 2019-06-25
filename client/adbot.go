@@ -105,6 +105,40 @@ func (c *AdbotClient) ScreenCapAdbDevice(id string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+// DumpAdbDeviceUINodes implement Client interface
+func (c *AdbotClient) DumpAdbDeviceUINodes(id string) ([]*adbot.AndroidUINode, error) {
+	resp, err := c.sendRequest("GET", fmt.Sprintf("/api/adb_devices/%s/uinodes", id), nil, 0, "", "")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return nil, &APIError{code, string(bs)}
+	}
+
+	var ret []*adbot.AndroidUINode
+	err = c.bind(resp.Body, &ret)
+	return ret, err
+}
+
+// ClickAdbDevice implement Client interface
+func (c *AdbotClient) ClickAdbDevice(id string, x, y int) error {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/click?x=%d&y=%d", id, x, y), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
 // RebootAdbDevice implement Client interface
 func (c *AdbotClient) RebootAdbDevice(id string) error {
 	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/reboot", id), nil, 0, "", "")

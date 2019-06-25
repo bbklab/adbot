@@ -214,6 +214,53 @@ func (s *Server) screenCapAdbDevice(ctx *httpmux.Context) {
 	ctx.Res.Write(imgbs)
 }
 
+func (s *Server) dumpAdbDeviceUINodes(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	uinodes, err := scheduler.DoNodeDumpUIAdbDevice(dvc.NodeID, dvc.ID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.JSON(200, uinodes)
+}
+
+func (s *Server) clickAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+		x, _  = strconv.Atoi(ctx.Query["x"])
+		y, _  = strconv.Atoi(ctx.Query["y"])
+	)
+
+	if x <= 0 || y <= 0 {
+		ctx.BadRequest("bad X,Y value")
+		return
+	}
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	err = scheduler.DoNodeAdbDeviceClick(dvc.NodeID, dvc.ID, x, y)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
 func (s *Server) rebootAdbDevice(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]

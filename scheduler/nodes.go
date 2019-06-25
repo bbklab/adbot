@@ -188,6 +188,44 @@ func DoNodeScreenCapAdbDevice(id, dvcid string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+// DoNodeDumpUIAdbDevice dump node's adb device UI
+func DoNodeDumpUIAdbDevice(id, dvcid string) ([]*adbot.AndroidUINode, error) {
+	nodeReq, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/api/adbot/device/uinodes?device_id=%s", id, dvcid), nil)
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	var uinodes []*adbot.AndroidUINode
+	err = json.NewDecoder(resp.Body).Decode(&uinodes)
+	return uinodes, err
+}
+
+// DoNodeAdbDeviceClick click node's adb device UI XY
+func DoNodeAdbDeviceClick(id, dvcid string, x, y int) error {
+	nodeReq, _ := http.NewRequest("PATCH", fmt.Sprintf("http://%s/api/adbot/device/click?device_id=%s&x=%d&y=%d", id, dvcid, x, y), nil)
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	return nil
+}
+
 // DoNodeRebootAdbDevice reboot node's adb device
 func DoNodeRebootAdbDevice(id, dvcid string) error {
 	nodeReq, _ := http.NewRequest("PATCH", fmt.Sprintf("http://%s/api/adbot/device/reboot?device_id=%s", id, dvcid), nil)

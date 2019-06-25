@@ -49,6 +49,8 @@ type Client interface {
 	ListAdbDevices() ([]*types.AdbDeviceWrapper, error)
 	InspectAdbDevice(id string) (*types.AdbDeviceWrapper, error)
 	ScreenCapAdbDevice(id string) ([]byte, error)
+	DumpAdbDeviceUINodes(id string) ([]*adbot.AndroidUINode, error)
+	ClickAdbDevice(id string, x, y int) error
 	RebootAdbDevice(id string) error
 	RunAdbDeviceCmd(id, cmd string) ([]byte, error)
 	SetAdbDeviceBill(id string, val int) error
