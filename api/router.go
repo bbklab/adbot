@@ -76,6 +76,8 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/adb_devices/:device_id/screencap", s.screenCapAdbDevice)
 	mux.GET("/adb_devices/:device_id/uinodes", s.dumpAdbDeviceUINodes)
 	mux.PATCH("/adb_devices/:device_id/click", s.clickAdbDevice)
+	mux.PATCH("/adb_devices/:device_id/goback", s.gobackAdbDevice)
+	mux.PATCH("/adb_devices/:device_id/gotohome", s.gotoHomeAdbDevice)
 	mux.PATCH("/adb_devices/:device_id/reboot", s.rebootAdbDevice)
 	mux.POST("/adb_devices/:device_id/exec", s.execCmdAdbDevice)
 	mux.PUT("/adb_devices/:device_id/bill", s.setAdbDeviceBill)

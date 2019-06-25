@@ -323,6 +323,44 @@ func (agent *Agent) clickAdbDevice(ctx *httpmux.Context) {
 	ctx.Status(200)
 }
 
+func (agent *Agent) gobackAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	err := extensions.AdbDeviceGoback(dvcID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func (agent *Agent) gotoHomeAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcID = ctx.Query["device_id"]
+	)
+
+	if dvcID == "" {
+		ctx.BadRequest("device id required")
+		return
+	}
+
+	err := extensions.AdbDeviceGotoHome(dvcID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
 func (agent *Agent) rebootAdbDevice(ctx *httpmux.Context) {
 	var (
 		dvcID = ctx.Query["device_id"]

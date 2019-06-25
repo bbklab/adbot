@@ -457,6 +457,12 @@ Query Parameters:
   - **x**    - must: Coordinate X value
   - **y**    - must: Coordinate Y value
 
+### Goback
+`PATCH /api/adb_devices/{device_id}/goback`  -  tap adb device back key
+
+### GotoHome
+`PATCH /api/adb_devices/{device_id}/gotohome`  -  tap adb device home key
+
 ### Reboot
 `PATCH /api/adb_devices/{device_id}/reboot`  -  reboot node adb device
 

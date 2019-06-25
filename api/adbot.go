@@ -261,6 +261,46 @@ func (s *Server) clickAdbDevice(ctx *httpmux.Context) {
 	ctx.Status(200)
 }
 
+func (s *Server) gobackAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	err = scheduler.DoNodeAdbDeviceGoback(dvc.NodeID, dvc.ID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func (s *Server) gotoHomeAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	err = scheduler.DoNodeAdbDeviceGotoHome(dvc.NodeID, dvc.ID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
+}
+
 func (s *Server) rebootAdbDevice(ctx *httpmux.Context) {
 	var (
 		dvcid = ctx.Path["device_id"]

@@ -31,6 +31,8 @@ func (agent *Agent) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/adbot/device/screencap", agent.screenCapAdbDevice)
 	mux.GET("/adbot/device/uinodes", agent.dumpAdbDeviceUINodes)
 	mux.PATCH("/adbot/device/click", agent.clickAdbDevice)
+	mux.PATCH("/adbot/device/goback", agent.gobackAdbDevice)
+	mux.PATCH("/adbot/device/gotohome", agent.gotoHomeAdbDevice)
 	mux.PATCH("/adbot/device/reboot", agent.rebootAdbDevice)
 	mux.POST("/adbot/device/exec", agent.runAdbDeviceCmd)
 }

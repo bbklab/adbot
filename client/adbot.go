@@ -139,6 +139,38 @@ func (c *AdbotClient) ClickAdbDevice(id string, x, y int) error {
 	return nil
 }
 
+// GobackAdbDevice implement Client interface
+func (c *AdbotClient) GobackAdbDevice(id string) error {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/goback", id), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
+// GotoHomeAdbDevice implement Client interface
+func (c *AdbotClient) GotoHomeAdbDevice(id string) error {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/gotohome", id), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
 // RebootAdbDevice implement Client interface
 func (c *AdbotClient) RebootAdbDevice(id string) error {
 	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/api/adb_devices/%s/reboot", id), nil, 0, "", "")
