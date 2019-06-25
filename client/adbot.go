@@ -284,6 +284,22 @@ func (c *AdbotClient) RevokeAdbDeviceAlipay(id string) error {
 	return nil
 }
 
+// RemoveAdbDevice implement Client interface
+func (c *AdbotClient) RemoveAdbDevice(id string) error {
+	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/api/adb_devices/%s", id), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return &APIError{code, string(bs)}
+	}
+
+	return nil
+}
+
 // ReportAdbEvent implement Client interface
 func (c *AdbotClient) ReportAdbEvent(ev *adbot.AdbEvent) error {
 	resp, err := c.sendRequest("POST", "/api/adb_events", ev, 0, "", "")

@@ -169,7 +169,7 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceSetWeightCommand(),    // set-weight
 			adbDeviceBindAlipayCommand(),   // bind-alipay
 			adbDeviceRevokeAlipayCommand(), // revoke-alipay
-			// adbDeviceRemoveCommand(),    // rm
+			adbDeviceRemoveCommand(),       // rm
 		},
 	}
 }
@@ -311,6 +311,15 @@ func adbDeviceRevokeAlipayCommand() cli.Command {
 		Usage:     "revoke abb device alipay account",
 		ArgsUsage: "DEVICE",
 		Action:    revokeAdbDeviceAlipay,
+	}
+}
+
+func adbDeviceRemoveCommand() cli.Command {
+	return cli.Command{
+		Name:      "rm",
+		Usage:     "remove abb device",
+		ArgsUsage: "DEVICE",
+		Action:    removeAdbDevice,
 	}
 }
 
@@ -803,6 +812,29 @@ func revokeAdbDeviceAlipay(c *cli.Context) error {
 	}
 
 	err = client.RevokeAdbDeviceAlipay(dvcID)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("OK"), '\r', '\n'))
+	return nil
+}
+
+func removeAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	err = client.RemoveAdbDevice(dvcID)
 	if err != nil {
 		return err
 	}

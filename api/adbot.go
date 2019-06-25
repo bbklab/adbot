@@ -529,7 +529,7 @@ func (s *Server) revokeAdbDeviceAlipay(ctx *httpmux.Context) {
 	}
 
 	// must ensure no adbpay orders related to this device unfinished ...
-	query := bson.M{"status": types.AdbOrderStatusPending}
+	query := bson.M{"device_id": dvc.ID, "status": types.AdbOrderStatusPending}
 	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
 		ctx.Locked(fmt.Sprintf("locked by %d related pending orders", len(orders)))
 		return
@@ -584,6 +584,45 @@ func (s *Server) verifyAdbDevice(ctx *httpmux.Context) {
 	ctx.Res.Header().Set("FeeYuan", feeYuan)
 	ctx.Res.WriteHeader(200)
 	ctx.Res.Write(qrpng)
+}
+
+func (s *Server) rmAdbDevice(ctx *httpmux.Context) {
+	var (
+		dvcid = ctx.Path["device_id"]
+	)
+
+	dvc, err := store.DB().GetAdbDevice(dvcid)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	if alipay, wxpay := dvc.Alipay, dvc.Wxpay; alipay != nil || wxpay != nil {
+		ctx.Forbidden("pls revoke binded alipay or wxpay account")
+		return
+	}
+
+	// firstly we should ensure this adb device is disabled
+	if dvc.Weight > 0 {
+		ctx.Forbidden("pls first disable this device by set weight = 0")
+		return
+	}
+
+	// must ensure no adbpay orders related to this device unfinished ...
+	query := bson.M{"device_id": dvc.ID, "status": types.AdbOrderStatusPending}
+	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
+		ctx.Locked(fmt.Sprintf("locked by %d related pending orders", len(orders)))
+		return
+	}
+
+	// remove db adb device
+	err = store.DB().RemoveAdbDevice(dvc.ID)
+	if err != nil {
+		ctx.AutoError(err)
+		return
+	}
+
+	ctx.Status(200)
 }
 
 //
@@ -866,7 +905,7 @@ func (s *Server) wrapAdbDevice(dvc *types.AdbDevice) *types.AdbDeviceWrapper {
 }
 
 func (s *Server) wrapAdbOrder(o *types.AdbOrder) *types.AdbOrderWrapper {
-	var dvcname string
+	var dvcname = "<unknown>"
 	dvc, _ := store.DB().GetAdbDevice(o.DeviceID)
 	if dvc != nil {
 		dvcname = dvc.Name()

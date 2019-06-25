@@ -60,6 +60,7 @@ type Client interface {
 	SetAdbDeviceWeight(id string, val int) error
 	BindAdbDeviceAlipay(id string, alipay *types.AlipayAccount) error
 	RevokeAdbDeviceAlipay(id string) error
+	RemoveAdbDevice(id string) error
 
 	ReportAdbEvent(ev *adbot.AdbEvent) error // public, used by adb node to report adb events
 	WatchAdbEvents() (io.ReadCloser, error)
