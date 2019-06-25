@@ -26,6 +26,8 @@
     + [设备屏幕截图](/docs/api/adbdevice.md#screencap)
     + [设备界面元素](/docs/api/adbdevice.md#uinodes)
     + [设备坐标点击](/docs/api/adbdevice.md#click)
+    + [设备返回键](/docs/api/adbdevice.md#goback)
+    + [设备Home键](/docs/api/adbdevice.md#gotohome)
     + [设备重启](/docs/api/adbdevice.md#reboot)
     + [删除](/docs/api/adbdevice.md#remove)
   - [订单](/docs/api/adborder.md)

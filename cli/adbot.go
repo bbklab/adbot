@@ -160,6 +160,8 @@ func AdbDeviceCommand() cli.Command {
 			adbDeviceScreenCapCommand(),    // screencap
 			adbDeviceDumpUICommand(),       // dumpui
 			adbDeviceClickCommand(),        // click
+			adbDeviceGobackCommand(),       // goback
+			adbDeviceGotoHomeCommand(),     // gotohome
 			adbDeviceRebootCommand(),       // reboot
 			adbDeviceExecCommand(),         // exec
 			adbDeviceSetBillCommand(),      // set-bill
@@ -223,6 +225,24 @@ func adbDeviceClickCommand() cli.Command {
 		ArgsUsage: "DEVICE",
 		Flags:     clickAdbDeviceFlags,
 		Action:    clickAdbDevice,
+	}
+}
+
+func adbDeviceGobackCommand() cli.Command {
+	return cli.Command{
+		Name:      "goback",
+		Usage:     "tap adb device back key",
+		ArgsUsage: "DEVICE",
+		Action:    gobackAdbDevice,
+	}
+}
+
+func adbDeviceGotoHomeCommand() cli.Command {
+	return cli.Command{
+		Name:      "gotohome",
+		Usage:     "tap adb device home key",
+		ArgsUsage: "DEVICE",
+		Action:    gotoHomeAdbDevice,
 	}
 }
 
@@ -560,6 +580,52 @@ func clickAdbDevice(c *cli.Context) error {
 	}
 
 	err = client.ClickAdbDevice(dvcID, x, y)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
+	return nil
+}
+
+func gobackAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	err = client.GobackAdbDevice(dvcID)
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(append([]byte("+OK"), '\r', '\n'))
+	return nil
+}
+
+func gotoHomeAdbDevice(c *cli.Context) error {
+	client, err := helpers.NewClient()
+	if err != nil {
+		return err
+	}
+
+	var (
+		dvcID = c.Args().First()
+	)
+
+	if dvcID == "" {
+		return cli.ShowSubcommandHelp(c)
+	}
+
+	err = client.GotoHomeAdbDevice(dvcID)
 	if err != nil {
 		return err
 	}

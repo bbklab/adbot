@@ -226,6 +226,42 @@ func DoNodeAdbDeviceClick(id, dvcid string, x, y int) error {
 	return nil
 }
 
+// DoNodeAdbDeviceGoback tap node's adb device back key
+func DoNodeAdbDeviceGoback(id, dvcid string) error {
+	nodeReq, _ := http.NewRequest("PATCH", fmt.Sprintf("http://%s/api/adbot/device/goback?device_id=%s", id, dvcid), nil)
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	return nil
+}
+
+// DoNodeAdbDeviceGotoHome tap node's adb device home key
+func DoNodeAdbDeviceGotoHome(id, dvcid string) error {
+	nodeReq, _ := http.NewRequest("PATCH", fmt.Sprintf("http://%s/api/adbot/device/gotohome?device_id=%s", id, dvcid), nil)
+
+	resp, err := ProxyNode(id, nodeReq, 0)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		bs, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("node:%s - %d - %s", id, code, string(bs))
+	}
+
+	return nil
+}
+
 // DoNodeRebootAdbDevice reboot node's adb device
 func DoNodeRebootAdbDevice(id, dvcid string) error {
 	nodeReq, _ := http.NewRequest("PATCH", fmt.Sprintf("http://%s/api/adbot/device/reboot?device_id=%s", id, dvcid), nil)

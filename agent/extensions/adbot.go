@@ -301,6 +301,24 @@ func AdbDeviceClick(dvcID string, x, y int) error {
 	return dvc.Click(x, y)
 }
 
+// AdbDeviceGoback tap device back key
+func AdbDeviceGoback(dvcID string) error {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return err
+	}
+	return dvc.GoBack()
+}
+
+// AdbDeviceGotoHome tap device home key
+func AdbDeviceGotoHome(dvcID string) error {
+	dvc, err := am.getDevice(dvcID)
+	if err != nil {
+		return err
+	}
+	return dvc.GotoHome()
+}
+
 // AdbDeviceReboot reboot given adb device
 func AdbDeviceReboot(dvcID string) error {
 	dvc, err := am.getDevice(dvcID)
