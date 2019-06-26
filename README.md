@@ -4,3 +4,5 @@
 
 ## Documents
   - [API](/docs/api/)
+  - [CLI](/docs/cli/)
+  - [Deploy](/docs/deploy/)
