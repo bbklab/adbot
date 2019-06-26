@@ -289,6 +289,10 @@ func ListAdbDevices() (map[string]*adbot.AndroidSysInfo, error) {
 
 // CheckAdbAlipayOrder check one alipay order on given adb device
 func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
+	if err := setupAdbotMgr(); err != nil {
+		return nil, err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return nil, err
@@ -306,6 +310,10 @@ func CheckAdbAlipayOrder(dvcID, orderID string) (*adbot.AlipayOrder, error) {
 
 // AdbDeviceScreenCap take screen cap on given adb device
 func AdbDeviceScreenCap(dvcID string) ([]byte, error) {
+	if err := setupAdbotMgr(); err != nil {
+		return nil, err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return nil, err
@@ -315,6 +323,10 @@ func AdbDeviceScreenCap(dvcID string) ([]byte, error) {
 
 // AdbDeviceDumpUINodes dump current android ui nodes
 func AdbDeviceDumpUINodes(dvcID string) ([]*adbot.AndroidUINode, error) {
+	if err := setupAdbotMgr(); err != nil {
+		return nil, err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return nil, err
@@ -324,6 +336,10 @@ func AdbDeviceDumpUINodes(dvcID string) ([]*adbot.AndroidUINode, error) {
 
 // AdbDeviceClick click device on give X,Y
 func AdbDeviceClick(dvcID string, x, y int) error {
+	if err := setupAdbotMgr(); err != nil {
+		return err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return err
@@ -333,6 +349,10 @@ func AdbDeviceClick(dvcID string, x, y int) error {
 
 // AdbDeviceGoback tap device back key
 func AdbDeviceGoback(dvcID string) error {
+	if err := setupAdbotMgr(); err != nil {
+		return err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return err
@@ -342,6 +362,10 @@ func AdbDeviceGoback(dvcID string) error {
 
 // AdbDeviceGotoHome tap device home key
 func AdbDeviceGotoHome(dvcID string) error {
+	if err := setupAdbotMgr(); err != nil {
+		return err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return err
@@ -351,6 +375,10 @@ func AdbDeviceGotoHome(dvcID string) error {
 
 // AdbDeviceReboot reboot given adb device
 func AdbDeviceReboot(dvcID string) error {
+	if err := setupAdbotMgr(); err != nil {
+		return err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return err
@@ -375,6 +403,10 @@ func AdbDeviceReboot(dvcID string) error {
 
 // RunAdbDeviceCmd run command on device adb device
 func RunAdbDeviceCmd(dvcID, cmd string) ([]byte, error) {
+	if err := setupAdbotMgr(); err != nil {
+		return nil, err
+	}
+
 	dvc, err := am.getDevice(dvcID)
 	if err != nil {
 		return nil, err
