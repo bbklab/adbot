@@ -1,5 +1,7 @@
 
 ## Adbot API Docs
+
+### 管理员API
   - [概览](/docs/api/info.md)
   - [管理员用户](/docs/api/user.md)
     + [Any](/docs/api/user.md#any)
@@ -39,3 +41,6 @@
     + [修改](/docs/api/setting.md#update)
   - [支付宝UserID二维码](/docs/api/other.md#alipay-userid-qrcode)
   - [下载接入文档](/docs/api/other.md#public-api)
+
+### 支付接入API
+  - [支付接入API](/docs/api/public_api.md)
