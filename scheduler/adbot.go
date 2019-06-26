@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"strings"
-	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -492,19 +491,15 @@ func RunAdbEventWatcherLoop() {
 		case adbot.AdbEventDeviceAlive:
 			MemoAdbDeviceStatus(dvcid, types.AdbDeviceStatusOnline, "")
 		case adbot.AdbEventAlipayOrder:
-			go checkDevicePendingOrders(dvcid)
+			if !IsRegisteredGoRoutine("check_adb_device_pending_orders", dvcid) {
+				go checkDevicePendingOrders(dvcid)
+			}
 		}
 	}
 }
 
-// sequential check device pending orders
-var dvcpendingmux sync.Mutex
-
 // note: only check pending orders within 5 minutes
 func checkDevicePendingOrders(dvcid string) {
-	dvcpendingmux.Lock()
-	defer dvcpendingmux.Unlock()
-
 	RegisterGoroutine("check_adb_device_pending_orders", dvcid)
 	defer DeRegisterGoroutine("check_adb_device_pending_orders", dvcid)
 
