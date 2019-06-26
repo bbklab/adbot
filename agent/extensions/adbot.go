@@ -99,7 +99,7 @@ func (mgr *adbMgr) watchDeviceAlipay(id string) {
 	mgr.reg.AddRoutine("adb_device_alipay_watcher", id)
 	defer mgr.reg.DelRoutine("adb_device_alipay_watcher", id)
 
-	noopTicker := time.NewTicker(time.Second * 60) // timer to report noop alipay order event
+	noopTicker := time.NewTicker(time.Second * 20) // timer to report noop alipay order event
 	defer noopTicker.Stop()
 
 	existTicker := time.NewTicker(time.Second * 5) // timer to check device exists
