@@ -65,6 +65,7 @@ adbot login -u admin -p 8bb306f380521aba3
 adbot info
 adbot settings show
 ```
+> 更多命令行见 [adbot CLI](/docs/cli/README.md)
 
 ### 维护
 
