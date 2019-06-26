@@ -43,12 +43,13 @@ rpm -ivh adbot-master-latest-rhel7.x86_64.rpm
 rpm -ivh /usr/share/adbot/dependency/mongod.pkg
 systemctl enable mongod
 
-cat > /etc/paybot/master.env << EOF
+mkdir -p /etc/adbot
+cat > /etc/adbot/master.env << EOF
 LISTEN_ADDR=0.0.0.0:80
 TLS_CERT_FILE=
 TLS_KEY_FILE=
 DB_TYPE=mongodb
-MGO_URL=mongodb://127.0.0.1:27017/paybot
+MGO_URL=mongodb://127.0.0.1:27017/adbot
 EOF
 ```
 > 可选: 安装 [docker headless vnc container](/docs/deploy/container-vncd.md#install)
@@ -56,7 +57,7 @@ EOF
 #### 启动
 ```bash
 systemctl start mongod
-systemctl start paybot-master
+systemctl start adbot-master
 
 adbot user create  --name admin --password 8bb306f380521aba3
 adbot login -u admin -p 8bb306f380521aba3
