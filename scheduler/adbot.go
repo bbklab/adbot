@@ -526,6 +526,22 @@ func checkDevicePendingOrders(dvcid string) {
 	}
 }
 
+// EnsureAdbDeviceIdle check adb device to ensure the given device
+//  - weight=0
+//  - pending orders count = 0
+func EnsureAdbDeviceIdle(dvc *types.AdbDevice) error {
+	if dvc.Weight > 0 {
+		return errors.New("device inusing, pls first disable this device by set weight = 0")
+	}
+
+	query := bson.M{"device_id": dvc.ID, "status": types.AdbOrderStatusPending}
+	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
+		return fmt.Errorf("device locked by %d related pending orders", len(orders))
+	}
+
+	return nil
+}
+
 //
 // AdbNode ReFresh Notifier Manager
 //
