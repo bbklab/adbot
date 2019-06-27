@@ -37,6 +37,6 @@ func GenSSHKeypair() (privBytes, pubBytes []byte, err error) {
 	pubBytes = make([]byte, base64.StdEncoding.EncodedLen(len(pubKeyBytes)))
 	base64.StdEncoding.Encode(pubBytes, pubKeyBytes)
 	pubBytes = append([]byte("ssh-rsa "), pubBytes...)
-	pubBytes = append(pubBytes, []byte(" robot@bbklab.net")...)
+	pubBytes = append(pubBytes, []byte(" robot@codingbot.net")...)
 	return
 }
