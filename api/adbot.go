@@ -262,6 +262,13 @@ func (s *Server) clickAdbDevice(ctx *httpmux.Context) {
 		return
 	}
 
+	// ensure device idle
+	err = scheduler.EnsureAdbDeviceIdle(dvc)
+	if err != nil {
+		ctx.Locked(err)
+		return
+	}
+
 	err = scheduler.DoNodeAdbDeviceClick(dvc.NodeID, dvc.ID, x, y)
 	if err != nil {
 		ctx.AutoError(err)
@@ -282,6 +289,13 @@ func (s *Server) gobackAdbDevice(ctx *httpmux.Context) {
 		return
 	}
 
+	// ensure device idle
+	err = scheduler.EnsureAdbDeviceIdle(dvc)
+	if err != nil {
+		ctx.Locked(err)
+		return
+	}
+
 	err = scheduler.DoNodeAdbDeviceGoback(dvc.NodeID, dvc.ID)
 	if err != nil {
 		ctx.AutoError(err)
@@ -299,6 +313,13 @@ func (s *Server) gotoHomeAdbDevice(ctx *httpmux.Context) {
 	dvc, err := store.DB().GetAdbDevice(dvcid)
 	if err != nil {
 		ctx.AutoError(err)
+		return
+	}
+
+	// ensure device idle
+	err = scheduler.EnsureAdbDeviceIdle(dvc)
+	if err != nil {
+		ctx.Locked(err)
 		return
 	}
 
@@ -522,19 +543,14 @@ func (s *Server) revokeAdbDeviceAlipay(ctx *httpmux.Context) {
 		return
 	}
 
-	// firstly we should ensure this adb device is disabled
-	if dvc.Weight > 0 {
-		ctx.Forbidden("pls first disable this device by set weight = 0")
+	// ensure device idle
+	err = scheduler.EnsureAdbDeviceIdle(dvc)
+	if err != nil {
+		ctx.Locked(err)
 		return
 	}
 
-	// must ensure no adbpay orders related to this device unfinished ...
-	query := bson.M{"device_id": dvc.ID, "status": types.AdbOrderStatusPending}
-	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
-		ctx.Locked(fmt.Sprintf("locked by %d related pending orders", len(orders)))
-		return
-	}
-
+	// revoke set nil
 	err = scheduler.MemoAdbDeviceAlipay(dvc.ID, nil)
 	if err != nil {
 		ctx.AutoError(err)
@@ -602,16 +618,10 @@ func (s *Server) rmAdbDevice(ctx *httpmux.Context) {
 		return
 	}
 
-	// firstly we should ensure this adb device is disabled
-	if dvc.Weight > 0 {
-		ctx.Forbidden("pls first disable this device by set weight = 0")
-		return
-	}
-
-	// must ensure no adbpay orders related to this device unfinished ...
-	query := bson.M{"device_id": dvc.ID, "status": types.AdbOrderStatusPending}
-	if orders, _ := store.DB().ListAdbOrders(nil, query); len(orders) > 0 {
-		ctx.Locked(fmt.Sprintf("locked by %d related pending orders", len(orders)))
+	// ensure device idle
+	err = scheduler.EnsureAdbDeviceIdle(dvc)
+	if err != nil {
+		ctx.Locked(err)
 		return
 	}
 
