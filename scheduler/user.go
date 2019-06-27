@@ -79,6 +79,10 @@ func genUserSession(userID, sessID string, req *http.Request) *types.UserSession
 		remoteIP, _, _   = net.SplitHostPort(req.RemoteAddr)
 	)
 
+	if realip := utils.GetHTTPRealIP(req); realip != "" {
+		remoteIP = realip
+	}
+
 	if sessID == "" { // gen a new ID if not provided
 		sessID = utils.RandomString(16)
 	}
