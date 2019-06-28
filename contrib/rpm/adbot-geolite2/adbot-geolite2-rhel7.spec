@@ -4,8 +4,8 @@ Version: 	1.0.0
 Release: 	rhel7
 License: 	Commercial
 Group:  	Extension
-Vendor:		BBKLAB
-Packager: 	Guangzheng Zhang <zhang.elinks@gmail.com>
+Vendor:		Coding Bot
+Packager: 	Coding Bot <codingbot@gmail.com>
 BuildRoot: 	/var/tmp/%{name}-%{version}-%{release}-root
 Source0: 	%{name}-%{version}-%{release}.tgz
 Requires(pre):		coreutils >= 8.22
@@ -47,5 +47,5 @@ cp -a share/geo/*    $RPM_BUILD_ROOT/usr/share/adbot/geo
 %postun
 
 %changelog
-* Sat Dec  2 2017 Guangzheng Zhang <zhang.elinks@gmail.com>
+* Sat Dec  2 2017 Coding Bot <codingbot@gmail.com>
 - 1.0.0 rpm release

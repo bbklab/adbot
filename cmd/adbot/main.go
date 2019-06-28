@@ -35,8 +35,8 @@ var (
 func main() {
 	app := cli.NewApp()
 	app.Name = "adbot"
-	app.Author = "GuangZheng Zhang"
-	app.Email = "zhang.elinks@gmail.com"
+	app.Author = "Coding Bot"
+	app.Email = "codingbot@gmail.com"
 	app.Version = version.GetVersion()
 	if gitCommit := version.GetGitCommit(); gitCommit != "" {
 		app.Version += "-" + gitCommit

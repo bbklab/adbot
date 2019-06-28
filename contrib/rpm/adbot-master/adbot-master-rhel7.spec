@@ -4,8 +4,8 @@ Version: 	{PRODUCT_VERSION}
 Release: 	rhel7
 License: 	Commercial
 Group:  	Extension
-Vendor:		BBKLAB
-Packager: 	Guangzheng Zhang <zhang.elinks@gmail.com>
+Vendor:		Coding Bot
+Packager: 	Coding Bot <codingbot@gmail.com>
 BuildRoot: 	/var/tmp/%{name}-%{version}-%{release}-root
 Source0: 	%{name}-%{version}-%{release}.tgz
 Requires(pre):		coreutils >= 8.22, adbot-dependency >= 1.0.0, adbot-geolite2 >= 1.0.0
@@ -86,5 +86,5 @@ systemctl daemon-reload
 :
 
 %changelog
-* Sat Dec  2 2017 Guangzheng Zhang <zhang.elinks@gmail.com>
+* Sat Dec  2 2017 Coding Bot <codingbot@gmail.com>
 - 0.1 rpm release

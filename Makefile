@@ -47,25 +47,27 @@ prod-full: product-full
 
 product: product-fast
 
-product-fast: clean binary master-rpm
-	echo "result @ ./product/"
-
 product-full: product-fast geo-rpm dep-rpm
 	echo "result @ ./product/"
 
+product-fast: clean binary master-rpm
+	echo "result @ ./product/"
+
+# anonymous product build
+#   - hide or obfuscate all of personal identifiers for security concerns
+#   - same as product build but with env ANONYMOUS=1
+prod-anonymous: product-anonymous
+
+prod-anonymous-full: product-anonymous-full
+
+product-anonymous:
+	@make ANONYMOUS=1 product
+
+product-anonymous-full:
+	@make ANONYMOUS=1 product-full
+
 # image build:
 image: clean binary agent-image master-image
-
-# TODO
-# anonymous product build
-# hide or obfuscate all of personal identifiers for security concerns
-#  - github account namespace
-#  - author informations in binary & rpm spec & releate note
-#  - binary static analyze
-#  - disable license report logic
-#  - any other issues ...
-product-anonymous:
-	echo "not implemented yet"
 
 prepare:
 	mkdir -p $(CACHEDIR)
@@ -98,7 +100,11 @@ binary: prepare
 ifeq (${NOLINT},)   # NOLINT == ""
 	@make gocheck
 endif
+ifneq (${ANONYMOUS},)   # ANONYMOUS != ""
+	@anonymous-build.sh
+else
 	@make binary-nolint
+endif
 
 binary-nolint:
 ifeq (${ENV_CIRCLECI}, true)

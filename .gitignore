@@ -8,3 +8,4 @@ coverage.html
 coverage-pretty.html
 contrib/tools/naive-license.pem
 license/server/bin/lic-server
+.anonymous-build/
