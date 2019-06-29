@@ -159,7 +159,7 @@ func (r *NewAdbOrderReq) Valid() error {
 		return fmt.Errorf("qrcode type unrecoginized")
 	}
 
-	if err := validator.Int(r.Fee, 1, 10000000000); err != nil {
+	if err := validator.Int(r.Fee, 1, 1000000000); err != nil {
 		return fmt.Errorf("fee %v", err)
 	}
 
