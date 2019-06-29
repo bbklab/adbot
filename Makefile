@@ -15,6 +15,14 @@ CACHEDIR=$(shell go env GOCACHE)
 ifeq ($(CACHEDIR),)  # ---> CACHEDIR == ""
 CACHEDIR="/tmp/.gocache"
 endif
+GOARCH=$(go env GOARCH)
+ifeq ($(GOARCH),)  # ---> GOARCH == ""
+GOARCH="amd64"
+endif
+GOOS=$(go env GOOS)
+ifeq ($(GOOS),)  # ---> GOOS == ""
+GOOS="linux"
+endif
 PRJNAME := "adbot"
 Compose := "https://github.com/docker/compose/releases/download/1.14.0/docker-compose"
 ImgMaster := "bbklab/adbot-master"
@@ -120,8 +128,9 @@ docker-binary-build:
 	docker run --rm \
 		--name buildadbot \
 		-w /go/src/${PKG} \
+		-e GOARCH=${GOARCH} \
 		-e CGO_ENABLED=0 \
-		-e GOOS=linux \
+		-e GOOS=${GOOS} \
 		-e GOCACHE=/go/cache \
 		-v $(PWD):/go/src/${PKG}:rw \
 		-v $(CACHEDIR):/go/cache/:rw \
@@ -134,7 +143,7 @@ docker-binary-build:
 #  mainly used for CI env
 #
 host-binary-build:
-	env CGO_ENABLED=0 GOOS=linux go build -ldflags "${BUILD_FLAGS}" -o bin/adbot ${PKG}/cmd/adbot
+	env GOARCH=${GOARCH} CGO_ENABLED=0 GOOS=${GOOS} go build -ldflags "${BUILD_FLAGS}" -o bin/adbot ${PKG}/cmd/adbot
 	echo "Binary Built!"
 
 #
