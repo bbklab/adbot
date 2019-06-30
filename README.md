@@ -6,3 +6,6 @@
   - [API](/docs/api/)
   - [CLI](/docs/cli/)
   - [Deploy](/docs/deploy/)
+
+## Architecture
+<img src="https://github.com/bbklab/adbot/raw/master/docs/architecture.png">
