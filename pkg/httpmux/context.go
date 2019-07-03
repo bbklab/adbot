@@ -8,6 +8,8 @@ import (
 	"net/http/httputil"
 	"strings"
 	"time"
+
+	"github.com/bbklab/adbot/pkg/utils"
 )
 
 const (
@@ -75,6 +77,9 @@ func (ctx *Context) StartAt() time.Time {
 // ClientIP return current request http client ip
 func (ctx *Context) ClientIP() string {
 	ip, _, _ := net.SplitHostPort(ctx.Req.RemoteAddr)
+	if realip := utils.GetHTTPRealIP(ctx.Req); realip != "" {
+		ip = realip
+	}
 	return ip
 }
 
