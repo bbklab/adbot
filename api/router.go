@@ -34,6 +34,11 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	mux.GET("/pprof/trace", s.adaptHandlerFunc(pprof.Trace))
 	mux.GET("/pprof/:pname", s.handlePProfName) // See: https://godoc.org/runtime/pprof#Profile  - goroutine,heap,allocs,threadcreate,block,mutex
 
+	// license
+	mux.PUT("/license", s.upsertLicense)
+	mux.GET("/license", s.licenseInfo)
+	mux.DELETE("/license", s.rmLicense)
+
 	// users
 	mux.GET("/users/any", s.anyUser) // public
 	mux.POST("/users", s.addUser)    // public
@@ -58,6 +63,8 @@ func (s *Server) setupRoutes(mux *httpmux.Mux) {
 	// nodes terminal
 	mux.ANY("/nodes/:node_id/terminal", s.openNodeTerminal) // Legacy, only for cli node terminal
 	mux.ANY("/nodes/:node_id/terminal_ng", s.openNodeTerminalNG)
+	// node join check, mainly for node side join check
+	mux.GET("/nodes/join_check", s.checkNodeJoin)
 
 	// geo
 	mux.GET("/geo/metadata", s.showGeoMetadata)

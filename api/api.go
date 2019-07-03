@@ -65,6 +65,9 @@ func (s *Server) Run() error {
 	// set leadership midware to verify we're the leader
 	// s.mux.SetGlobalPreMidware(s.checkLeaderShipMW)
 
+	// check licenses
+	s.mux.SetGlobalPreMidware(s.checkLicenseMW)
+
 	// set cors http headers
 	s.mux.SetGlobalPreMidware(s.corsMW)
 	s.mux.SetGlobalPreMidware(s.bypassMW)

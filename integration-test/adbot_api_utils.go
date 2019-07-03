@@ -3,12 +3,11 @@ package main
 import (
 	check "gopkg.in/check.v1"
 
-	"github.com/bbklab/adbot/pkg/ptype"
 	"github.com/bbklab/adbot/types"
 )
 
 func (s *ApiSuite) getAssertOnlineNode(c *check.C) *types.Node {
-	nodes, err := s.client.ListNodes(nil, ptype.Bool(true), "")
+	nodes, err := s.client.ListNodes(nil, "online", "")
 	c.Assert(err, check.IsNil)
 	c.Assert(len(nodes) > 0, check.Equals, true)
 
@@ -21,7 +20,7 @@ func (s *ApiSuite) getAssertOnlineNode(c *check.C) *types.Node {
 }
 
 func (s *ApiSuite) getOnlineNodeIDs(c *check.C) []string {
-	nodes, err := s.client.ListNodes(nil, ptype.Bool(true), "")
+	nodes, err := s.client.ListNodes(nil, "online", "")
 	c.Assert(err, check.IsNil)
 	c.Assert(len(nodes) > 0, check.Equals, true)
 

@@ -8,20 +8,17 @@ import (
 
 	mgo "gopkg.in/mgo.v2"
 
-	"github.com/bbklab/adbot/pkg/file"
-	"github.com/bbklab/adbot/pkg/utils"
 	"github.com/bbklab/adbot/pkg/validator"
 )
 
 // MasterConfig is exported
 type MasterConfig struct {
-	Listen        string       `json:"listen"`             // must
-	TLSCert       string       `json:"tls_cert,omitempty"` // optional, if given, serving additional https protocol
-	TLSKey        string       `json:"tls_key,omitempty"`  // optional, if given, serving additional https protocol
-	PublicKeyData string       `json:"public_key_data"`    // must, file or text
-	UnixSock      string       `json:"unix_sock"`          // optional
-	PidFile       string       `json:"pid_file"`           // optional
-	Store         *StoreConfig `json:"store"`              // must
+	Listen   string       `json:"listen"`             // must
+	TLSCert  string       `json:"tls_cert,omitempty"` // optional, if given, serving additional https protocol
+	TLSKey   string       `json:"tls_key,omitempty"`  // optional, if given, serving additional https protocol
+	UnixSock string       `json:"unix_sock"`          // optional
+	PidFile  string       `json:"pid_file"`           // optional
+	Store    *StoreConfig `json:"store"`              // must
 }
 
 // StoreConfig is exported
@@ -51,15 +48,6 @@ func (c *MasterConfig) Valid() error {
 			if _, err := os.Stat(file); err != nil {
 				return err
 			}
-		}
-	}
-
-	// we're expecting a valid pem public key
-	// require this validation check may lead to start up failure under circleci environment,
-	// thus we enable this only while we got an exists public key file
-	if file.Exists(c.PublicKeyData) {
-		if _, err := utils.LoadRSAPublicKey(c.PublicKeyData); err != nil {
-			return fmt.Errorf("try load public key [%s] error: %v", c.PublicKeyData, err)
 		}
 	}
 

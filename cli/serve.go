@@ -26,12 +26,6 @@ var (
 			EnvVar: "TLS_KEY_FILE",
 		},
 		cli.StringFlag{
-			Name:   "public-key-data",
-			Usage:  "The public key file path or text",
-			Value:  "/etc/adbot/keys/public.key.pem",
-			EnvVar: "PUBLIC_KEY_DATA",
-		},
-		cli.StringFlag{
 			Name:   "db-type",
 			Usage:  "The database store type, [mongodb]",
 			Value:  "mongodb",
@@ -71,12 +65,11 @@ func ServeCommand() cli.Command {
 
 func runMaster(c *cli.Context) error {
 	cfg := &types.MasterConfig{
-		Listen:        c.String("listen"),
-		TLSCert:       c.String("tls-cert"),
-		TLSKey:        c.String("tls-key"),
-		PublicKeyData: c.String("public-key-data"),
-		UnixSock:      c.String("unix-sock"),
-		PidFile:       c.String("pid-file"),
+		Listen:   c.String("listen"),
+		TLSCert:  c.String("tls-cert"),
+		TLSKey:   c.String("tls-key"),
+		UnixSock: c.String("unix-sock"),
+		PidFile:  c.String("pid-file"),
 		Store: &types.StoreConfig{
 			Type: c.String("db-type"),
 			MongodbConfig: &types.MongodbConfig{

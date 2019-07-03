@@ -20,7 +20,6 @@ prepare() {
 	test -e bin/adbot -a -x bin/adbot
 	test -e systemd/adbot-master.service -a -r systemd/adbot-master.service
 	test -e etc/master.env.example -a -r etc/master.env.example
-	test -e etc/keys/public.key.pem -a -r etc/keys/public.key.pem
 
 	mkdir -p $product
 

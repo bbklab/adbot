@@ -34,9 +34,6 @@ cp -a etc/master.env.example  $RPM_BUILD_ROOT/etc/adbot/master.env.example
 mkdir -p $RPM_BUILD_ROOT/etc/adbot/node_hooks
 mkdir -p $RPM_BUILD_ROOT/etc/adbot/node_hooks/post_install
 mkdir -p $RPM_BUILD_ROOT/etc/adbot/node_hooks/pre_uninstall
-# product public keys
-mkdir -p $RPM_BUILD_ROOT/etc/adbot/keys
-cp -a etc/keys/public.key.pem $RPM_BUILD_ROOT/etc/adbot/keys/public.key.pem
 
 # /usr/share/adbot/
 mkdir -p $RPM_BUILD_ROOT/usr/share/adbot
@@ -55,8 +52,6 @@ cp -a systemd/adbot-master.service $RPM_BUILD_ROOT/usr/lib/systemd/system/
 %attr(0644, root, root) /etc/adbot/master.env.example
 %attr(0755, root, root) /etc/adbot/node_hooks/post_install/
 %attr(0755, root, root) /etc/adbot/node_hooks/pre_uninstall/
-%attr(0755, root, root) /etc/adbot/keys/
-%attr(0644, root, root) /etc/adbot/keys/public.key.pem
 %attr(-, root, root)    /usr/share/adbot/*
 %attr(0644, root, root) /usr/lib/systemd/system/adbot-master.service
 

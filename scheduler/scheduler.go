@@ -32,7 +32,7 @@ type Scheduler struct {
 	adbcbpub     *pubsub.Publisher // adbpay order callback event publisher
 	adbevpub     *pubsub.Publisher // adb device event publisher
 	limitMgr     *rateLimiterMgr   // event rate limiter
-	pubKeyData   string            // public key file path or text (for verify license data)
+	licMgr       *licMgr           // license manager
 	tgbot        *tgbot            // telegram bot
 	geo          geoip.Handler     // geo data
 	startAt      time.Time         // started at time
@@ -42,7 +42,7 @@ type Scheduler struct {
 
 // Init initilize the package scope scheduler reference,
 // called while master boot up, fatal exit if met any errors
-func Init(m *mole.Master, pubKeyData string) {
+func Init(m *mole.Master) {
 	if m == nil {
 		log.Fatalln("nil cluster master")
 	}
@@ -50,6 +50,11 @@ func Init(m *mole.Master, pubKeyData string) {
 	geoReader, err := geoip.NewGeo(resGeoCity, resGeoAsn)
 	if err != nil {
 		log.Fatalln("initialize GeoIP2 data reader error", err)
+	}
+
+	err = InitPubKey()
+	if err != nil {
+		log.Fatalln("initialize public RSA key error", err)
 	}
 
 	sched = &Scheduler{
@@ -63,12 +68,15 @@ func Init(m *mole.Master, pubKeyData string) {
 		adbcbpub:    pubsub.NewPublisher(time.Second*5, 1024),
 		adbevpub:    pubsub.NewPublisher(time.Second*5, 1024),
 		limitMgr:    newRateLimiter(),
-		pubKeyData:  pubKeyData,
+		licMgr:      newLicMgr(),
 		tgbot:       newRuntimeTGBot(),
 		geo:         geoReader,
 		leader:      false,
 		startAt:     time.Now(),
 	}
+
+	// start license guarder after `sched` being setup (avoid nil reference panic)
+	sched.licMgr.startLoop()
 
 	// start cron daemon
 	// mark all of adb devices .OverQuota == false
