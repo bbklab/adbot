@@ -39,6 +39,12 @@ type Store interface {
 	ListNodes(pager types.Pager, filter interface{}) ([]*types.Node, error)
 	CountNodes(filter interface{}) int
 
+	AddBlockedNode(node *types.Node) error
+	RemoveBlockedNode(id string) error
+	GetBlockedNode(id string) (*types.Node, error)
+	ListBlockedNodes(pager types.Pager) ([]*types.Node, error)
+	CountBlockedNodes() int
+
 	// adb node
 	AddAdbDevice(dvc *types.AdbDevice) error
 	UpdateAdbDevice(id string, update interface{}) error
@@ -54,6 +60,11 @@ type Store interface {
 	GetAdbOrder(id string) (*types.AdbOrder, error)
 	ListAdbOrders(pager types.Pager, filter interface{}) ([]*types.AdbOrder, error)
 	CountAdbOrders(filter interface{}) (int, int) // count orders, fees
+
+	// license
+	UpsertLicense(text string) error
+	RemoveLicense() error
+	GetLicense() (string, error)
 
 	UpsertSettings(update interface{}) error
 	GetSettings() (*types.Settings, error)

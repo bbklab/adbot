@@ -16,6 +16,8 @@ services:
       - ADVERTISE_ADDR=127.0.0.1:8008
       - DB_TYPE=mongodb
       - MGO_URL=mongodb://127.0.0.1:27017/adbot
+      - IGNORE_LICENSE_SIGN=0434e4683086e401f1063c23081a0c637335924718ca4b50d75112b48ee32e3d3c6e64ca911ae5b137211e8d9ee4c0cb0d87c4b1ebf7e40fea235e5c02e6eb014855014b4e722d95adbf225a13bf7af45d4571563c612d9d11bc8607fb86396f33ffe443b9d10ebb1122a3c4327ccb87d49e5e253f72a3f22f4f85bc39cd80172e9cecdd19e7ad66d5948b9936f748c7aee7fc8f2e720d5c03d8ec94b68636d75d63dcbf2943e8deb2e1c7ec55244c30027c0d962e517dfd44932b4065bba46522fd50ebb4d2a904a7a8909567a4501bc89f34c215716d9a1de565a2576c3300ad7d42f9d4c7747f83b8d4887631e5668879f4dc4f10853f2d6cda7338b0cfea
+      - IGNORE_LICENSE_HASH=6dd0afbb1692397bd369022b775aca30896b82c3a045c36d3f5cc5daca2799e2
     volumes:
       - /var/run/adbot:/var/run/adbot:rw                                   # unix sock
       - /var/log/adbot-audit:/var/log/adbot-audit:rw                       # audit log

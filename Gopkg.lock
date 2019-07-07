@@ -176,6 +176,14 @@
   version = "v1.0.3"
 
 [[projects]]
+  digest = "1:7894d93b1bbb3ab412c9b4f2573accc5becbcce2516e1fe5a4d2da1825b2e369"
+  name = "github.com/miekg/dns"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b13675009d59c97f3721247d9efa8914e1866a5b"
+  version = "v1.1.15"
+
+[[projects]]
   digest = "1:ea8780346eba74e5eb3e8b6bded2ec46c1c81cd745bc00e9964b730955bf4252"
   name = "github.com/opencontainers/runc"
   packages = [
@@ -287,9 +295,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
+  digest = "1:f725870db296b0980693bba684bac9a981ef857dfa050c92a711598b95368fc2"
   name = "golang.org/x/net"
-  packages = ["context"]
+  packages = [
+    "bpf",
+    "context",
+    "internal/iana",
+    "internal/socket",
+    "ipv4",
+    "ipv6",
+  ]
   pruneopts = "NUT"
   revision = "f4c29de78a2a91c00474a2e689954305c350adf9"
 
@@ -381,6 +396,7 @@
     "github.com/gorilla/securecookie",
     "github.com/gorilla/websocket",
     "github.com/kr/pty",
+    "github.com/miekg/dns",
     "github.com/oschwald/geoip2-golang",
     "github.com/oschwald/maxminddb-golang",
     "github.com/robfig/cron",

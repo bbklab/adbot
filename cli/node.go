@@ -207,7 +207,7 @@ func listNodes(c *cli.Context) error {
 		filter = c.String("filter") // label filter
 		online = c.String("online") // online filter
 		cldsvr = c.String("cldsvr") // cloudsvr filter
-		olflag *bool
+		status string
 	)
 
 	// label filter
@@ -218,11 +218,14 @@ func listNodes(c *cli.Context) error {
 
 	// online filter
 	if online != "" {
-		flag, _ := strconv.ParseBool(online)
-		olflag = &flag
+		if flag, _ := strconv.ParseBool(online); flag {
+			status = "online"
+		} else {
+			status = "offline"
+		}
 	}
 
-	nodes, err := client.ListNodes(lbsFilter, olflag, cldsvr)
+	nodes, err := client.ListNodes(lbsFilter, status, cldsvr)
 	if err != nil {
 		return err
 	}
@@ -411,7 +414,7 @@ func watchNode(c *cli.Context) error {
 
 	// if all, query all current node ids
 	if all || (len(nodeIDs) > 0 && strings.ToLower(nodeIDs[0]) == helpers.ParamAll) {
-		nodes, err := client.ListNodes(nil, nil, "")
+		nodes, err := client.ListNodes(nil, "", "")
 		if err != nil {
 			return err
 		}

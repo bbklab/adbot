@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -17,6 +18,7 @@ var (
 func InsecureHTTPClient() *http.Client {
 	once.Do(func() {
 		cli = &http.Client{
+			Timeout: time.Second * 180,
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,

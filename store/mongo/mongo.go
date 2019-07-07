@@ -11,9 +11,11 @@ import (
 var (
 	cUser        = "user"
 	cUserSession = "user_session"
-	cNode        = "node"       // node
+	cNode        = "node" // node
+	cBlockedNode = "blocked_node"
 	cAdbDevice   = "adb_device" // adb device
 	cAdbOrder    = "adb_order"  // adb order
+	cLicense     = "license"    // license
 	cSettings    = "settings"
 	cPing        = "ping"
 )
@@ -250,6 +252,15 @@ var indexes = map[string][]mgo.Index{
 		},
 		{
 			Key: []string{"inst_job"},
+		},
+		{
+			Key: []string{"join_at"},
+		},
+	},
+	cBlockedNode: {
+		{
+			Key:    []string{"id"},
+			Unique: true,
 		},
 		{
 			Key: []string{"join_at"},

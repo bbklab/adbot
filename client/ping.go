@@ -1,6 +1,8 @@
 package client
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"time"
 )
@@ -35,4 +37,23 @@ func (c *AdbotClient) QueryLeader() (string, bool) {
 
 	bs, _ := ioutil.ReadAll(resp.Body)
 	return string(bs), resp.StatusCode == 200
+}
+
+// NodeJoinCheck implement Client interface
+func (c *AdbotClient) NodeJoinCheck(id string) error {
+	resp, err := c.sendRequest("GET", fmt.Sprintf("/api/nodes/join_check?node_id=%s", id), nil, 0, "", "")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	bs, _ := ioutil.ReadAll(resp.Body)
+	switch code := resp.StatusCode; code {
+	case 403:
+		return errors.New(string(bs))
+	case 202:
+		return nil
+	default:
+		return &APIError{code, string(bs)}
+	}
 }

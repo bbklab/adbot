@@ -1,0 +1,26 @@
+package scheduler
+
+import (
+	"crypto/rsa"
+
+	"github.com/bbklab/adbot/pkg/utils"
+)
+
+// product RSA public key text
+var (
+	pubKeyData = `-----BEGIN RSA PUBLIC KEY-----
+MIIBCgKCAQEA3eweGnJfqMdWkvuIiYV5JnHj35SmqeuFiy3VK4bX4h9OvK6DuuKp
+r6YUIBLuHUyRHsxH4az/xDtchUQur7fuv9HpYQX/xjVkh4lJCnjMRfy7e3f5Tj+r
+y3H8F0GUlO3hvs/gv+m6lTuFEEwIXp3HgbWtgVT//weLuQGFK4phmozzDCLFfNEz
+7dLbi7lo5lCY57EhRkQLPSo7Si3Bfn7dTcfeDK/P/ELVSo2rAh7HR6Tg5wyGnPHI
+1RRw0aV6hxO3Atmf7OF/9nmZlqDy+TRGtVryIL9pXWDR2K0GaK3YqlsgHoKTs0LT
+mJmQ5xKmAt6kBBXZWp96aYdZKIXoOxpC/QIDAQAB
+-----END RSA PUBLIC KEY-----`
+	pubKey *rsa.PublicKey
+)
+
+// InitPubKey initialize product ras public key
+func InitPubKey() (err error) {
+	pubKey, err = utils.LoadRSAPublicKey(pubKeyData)
+	return err
+}

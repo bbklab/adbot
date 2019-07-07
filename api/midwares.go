@@ -14,6 +14,7 @@ import (
 	"github.com/bbklab/adbot/scheduler"
 	"github.com/bbklab/adbot/store"
 	"github.com/bbklab/adbot/types"
+	lictypes "github.com/bbklab/adbot/types/lic"
 )
 
 func init() {
@@ -22,6 +23,43 @@ func init() {
 	// does NOT implemented http.Hijacker
 	// See: https://github.com/golang/go/issues/14797
 	os.Setenv("GODEBUG", "http2server=0")
+}
+
+// global midware to verify current license
+//
+//
+func (s *Server) checkLicenseMW(ctx *httpmux.Context) {
+	// skip this midware
+	// if current request hit handlers is license free handlers
+	handlers := ctx.MatchedHandlers()
+	if s.isLicenseFreeHandler(handlers) {
+		return
+	}
+
+	// if should ignore license verify, mainly for CI env
+	if scheduler.IgnoreLicense() {
+		return
+	}
+
+	// if no license provided, ask for a new license
+	if scheduler.IsEmptyLicense() {
+		ctx.PaymentRequired(lictypes.ErrLicenseNotProvided)
+		ctx.Abort()
+		return
+	}
+
+	var (
+		lic = scheduler.RuntimeLicense()
+	)
+
+	// if license expired, no more new objects are allowed to be created
+	if lic.IsExpired() && s.isLicenseExpiredDenyHandler(handlers) {
+		ctx.PaymentRequired(lictypes.ErrLicenseExpired)
+		ctx.Abort()
+		return
+	}
+
+	// pass!
 }
 
 // global midware to add cors http headers

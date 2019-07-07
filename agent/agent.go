@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -109,9 +110,9 @@ func (agent *Agent) Join() error {
 	}
 	log.Infof("talking to the healthy master %s", agent.client.Peer())
 
-	// query master if self is blocked
-	if agent.isBlocked(id) {
-		log.Fatalf("agent %s has been blocked permanently", id)
+	// query if self allow to join
+	if err := agent.isJoinReady(id); err != nil {
+		return fmt.Errorf("agent %s can't join: %v", id, err)
 	}
 
 	// setup mole agent & join
@@ -133,8 +134,8 @@ func (agent *Agent) Join() error {
 	return nil
 }
 
-func (agent *Agent) isBlocked(id string) bool {
-	return false
+func (agent *Agent) isJoinReady(id string) error {
+	return agent.client.NodeJoinCheck(id)
 }
 
 func getAgentID() (string, error) {

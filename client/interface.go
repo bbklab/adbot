@@ -10,6 +10,7 @@ import (
 	"github.com/bbklab/adbot/pkg/adbot"
 	"github.com/bbklab/adbot/pkg/label"
 	"github.com/bbklab/adbot/types"
+	lictypes "github.com/bbklab/adbot/types/lic"
 )
 
 // Client offers a common interface to access adbot api services and
@@ -21,6 +22,11 @@ type Client interface {
 	Peer() string     // print who we're talking to
 	PeerAddr() string // similar as above, but only unix or tcp address
 	QueryLeader() (string, bool)
+	NodeJoinCheck(id string) error // mainly used by node
+
+	UpdateLicense(data []byte) error
+	ProductLicenseInfo() (*lictypes.License, error)
+	RemoveLicense() error
 
 	AnyUsers() (bool, error)
 	ListUsers() ([]*types.User, error)
@@ -29,7 +35,7 @@ type Client interface {
 	CreateUser(user *types.User) (*types.User, error)
 	ChangeUserPassword(req *types.ReqChangePassword) error
 
-	ListNodes(lbsFilter label.Labels, online *bool, cldsvr string) ([]*types.NodeWrapper, error)
+	ListNodes(lbsFilter label.Labels, status, cldsvr string) ([]*types.NodeWrapper, error)
 	InspectNode(id string) (*types.NodeWrapper, error)
 	WatchNodeStats(id string) (io.ReadCloser, error)
 	RunNodeCmd(id, cmd string) (io.ReadCloser, error)

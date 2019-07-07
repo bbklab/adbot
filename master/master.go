@@ -86,7 +86,7 @@ func New(cfg *types.MasterConfig) *Master {
 	apiServer := api.NewServer(unixSock, hl, tlshl, cfg)
 
 	// init runtime scheduler (top level)
-	scheduler.Init(master, cfg.PublicKeyData)
+	scheduler.Init(master)
 
 	cmpg := ha.NewDummyCampaigner()
 

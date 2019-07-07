@@ -259,12 +259,8 @@ prepare-docker-compose:
 		echo "docker-compose downloaded!"; \
 	fi
 
-# apply a new dev license
-prepare-dev-license:
-	@cd ./contrib/tools/ && make license && sleep 1
-
 # require docker daemon >= 1.13 to support docker compose v3
-local-cluster: image prepare-docker-compose rm-local-cluster prepare-dev-license
+local-cluster: image prepare-docker-compose rm-local-cluster
 	docker-compose -p ${PRJNAME} up -d --scale master=1 --scale agent=0
 	docker-compose -p ${PRJNAME} ps
 

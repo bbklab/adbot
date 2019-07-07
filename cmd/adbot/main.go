@@ -96,6 +96,7 @@ func main() {
 		icli.NodeCommand(),
 		icli.SettingsCommand(),
 		icli.GeoCommand(),
+		icli.LicenseCommand(),
 		icli.AdbNodeCommand(),
 		icli.AdbDeviceCommand(),
 	}

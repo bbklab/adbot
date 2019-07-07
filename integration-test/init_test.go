@@ -12,7 +12,6 @@ import (
 	check "gopkg.in/check.v1"
 
 	"github.com/bbklab/adbot/client"
-	"github.com/bbklab/adbot/pkg/ptype"
 	"github.com/bbklab/adbot/types"
 )
 
@@ -118,7 +117,7 @@ func waitNodeGetOnline(client client.Client, maxWait time.Duration) error {
 			return errors.New("wait nodes get online timeout")
 
 		case <-ticker.C:
-			nodes, err := client.ListNodes(nil, ptype.Bool(true), "") // list online nodes
+			nodes, err := client.ListNodes(nil, "online", "") // list online nodes
 			if err != nil {
 				return err
 			}

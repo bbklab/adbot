@@ -14,7 +14,7 @@ import (
 )
 
 // ListNodes implement Client interface
-func (c *AdbotClient) ListNodes(lbsFilter label.Labels, online *bool, cldsvr string) ([]*types.NodeWrapper, error) {
+func (c *AdbotClient) ListNodes(lbsFilter label.Labels, status, cldsvr string) ([]*types.NodeWrapper, error) {
 	var lbsQuery string
 	for k, v := range lbsFilter {
 		if lbsQuery == "" {
@@ -24,9 +24,9 @@ func (c *AdbotClient) ListNodes(lbsFilter label.Labels, online *bool, cldsvr str
 		}
 	}
 
-	var uri = fmt.Sprintf("/api/nodes?labels=%s&cldsvr=%s&online=", url.QueryEscape(lbsQuery), cldsvr)
-	if online != nil {
-		uri += fmt.Sprintf("%t", *online)
+	var uri = fmt.Sprintf("/api/nodes?labels=%s&cldsvr=%s", url.QueryEscape(lbsQuery), cldsvr)
+	if status != "" {
+		uri += fmt.Sprintf("&status=%s", status)
 	}
 
 	resp, err := c.sendRequest("GET", uri, nil, 0, "", "")

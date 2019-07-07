@@ -12,6 +12,6 @@ COPY bin/adbot                                        /adbot/bin/
 COPY contrib/rpm/adbot-master/share/                  /usr/share/adbot/
 COPY contrib/rpm/adbot-dependency/share/              /usr/share/adbot/
 COPY contrib/rpm/adbot-geolite2/share/                /usr/share/adbot/
-COPY contrib/rpm/dist/agent.pkg                     /usr/share/adbot/
-COPY contrib/rpm/dist/agent.pkg.sha1sum             /usr/share/adbot/
+COPY contrib/rpm/dist/agent.pkg                       /usr/share/adbot/
+COPY contrib/rpm/dist/agent.pkg.sha1sum               /usr/share/adbot/
 ENTRYPOINT ["bin/adbot", "serve"]
