@@ -47,6 +47,7 @@ func (s *Server) classify() {
 				s.addUser,       // add first admin user
 				s.userProfile,   // user profile
 				s.userAuthLogin, // user login
+				s.userLogout,    // user logout
 				s.upsertLicense, // user upsert license
 				s.licenseInfo,   // show license info
 				s.rmLicense,     // remove license
