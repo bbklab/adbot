@@ -1,0 +1,43 @@
+
+## License API
+
+### Get
+`GET /api/license`  -  query current license info
+  
+Example Request:
+```liquid
+GET /api/license HTTP/1.1
+```
+
+Example Response:
+```json
+{
+  "id": "1b641f0089610ea7",
+  "product": "adbot",
+  "customer": "5f62e40d4e2bdf0d",
+  "module": 0,
+  "max_nodes": 300,
+  "expired_at": "2116-12-25T09:18:08.728883556+08:00",    // 过期时间
+  "created_at": "2019-07-07T09:18:08.728883846+08:00",
+  "raw": "/5H/gQMBAQdMaWNlbnNlAf+CAAELAQJJRAEMAAEHUHJvZHVjdAEMAAEIQ3VzdG9tZXIBDAABBFNhbHQBDAABBk1vZHVsZQEGAAEFTm9uY2UBBAABCE1heE5vZGVzAQQAAQZSYW5kb20BBAABCUV4cGlyZWRBdAH/hAABCUNyZWF0ZWRBdAH/hAABA1JhdwEMAAAAEP+DBQEBBFRpbWUB/4QAAAD/hv+CARAxYjY0MWYwMDg5NjEwZWE3AQVhZGJvdAEQNWY2MmU0MGQ0ZTJiZGYwZAEgNmMyODY4MzY5NDdmM2RlYjY2MWFjZTNjYzQzOGM1ZDUC/LpCkKAB/gJYAfgrXfZYvUIBUgEPAQAAAA+MCNdQK3HhZAHgAQ8BAAAADtSzP1ArceKGAeAA"
+}
+```
+
+### Update
+`PUT /api/license`  -  use new license
+
+Example Request:
+```liquid
+PUT /api/license HTTP/1.1
+
+-----BEGIN COMBINED LICENSE-----
+WyItLS0tLUJFR0lOIExJQ0VOU0UtLS0tLVxuQVVUSE9SOiBDT0RJTkdCT1Rcblxu
+Y01XZFRISG43R2h3Zmo5OVhCWVVMdC9QZzVrTGdLNW9EQkVIWXh5a21pMUhxSFJn
+...
+...
+...
+djlBUm1udEhSN0RDSlBObDJiOWRDYWVWSHFOdGpKZFpZNmRvbkhWbDBEL3VXWTVy
+M0FxcytZVHhzaUdMbGNcbjFpeFBcbi0tLS0tRU5EIFNJR05BVFVSRS0tLS0tXG4i
+XQ==
+-----END COMBINED LICENSE-----
+```
