@@ -57,9 +57,11 @@ product: product-fast
 
 product-full: product-fast geo-rpm dep-rpm
 	echo "result @ ./product/"
+	@${PWD}/anonymous-build.sh check
 
 product-fast: clean binary master-rpm
 	echo "result @ ./product/"
+	@${PWD}/anonymous-build.sh check
 
 # anonymous product build
 #   - hide or obfuscate all of personal identifiers for security concerns
