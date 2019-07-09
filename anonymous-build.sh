@@ -4,6 +4,45 @@
 #
 set -e
 
+# colors
+echo_green() {
+  local content=$*
+  echo -e "\033[1;32m${content}\033[0m\c "
+}
+
+echo_red() {
+  local content=$*
+  echo -e "\033[1;31m${content}\033[0m\c "
+}
+
+# function check ensure binary file not contains keywords
+function check() {
+	keywords=(
+		"bbklab"
+		"zhang.elinks@gmail.com"
+		"guangzheng"
+		"bbklab.me"
+		"bbklab.net"
+	)
+
+	for keyword in ${keywords[*]}
+	do
+		if grep -E -q -i "$keyword" bin/adbot; then
+			echo_red "-WARN Anoymous Binary Check Keyword: [$keyword] found in the binary\n"
+			return 1
+		fi
+	done
+
+	echo_green "+OK Anonymous Binary Built!\n"
+	return 0
+}
+
+# check binary and exit
+if [ "$1" == "check" ]; then
+	check || true
+	exit
+fi
+
 # setup env (note: same as Makefile)
 PWD=$(pwd)
 CACHEDIR=$(go env GOCACHE)
@@ -74,20 +113,5 @@ echo +OK Binary Built!
 # copy result out
 cp -afv ${ANONYBUILDDIR}/bin/adbot  bin/adbot
 
-# ensure binary file not contains keywords
-keywords=(
-  "bbklab"
-  "zhang.elinks@gmail.com"
-  "guangzheng"
-  "bbklab.me"
-  "bbklab.net"
-)
-for keyword in ${keywords[*]}
-do
-	if grep -E -q -i $keyword bin/adbot; then
-		echo -ERR keyword: [$keyword] found in the binary
-		exit 1
-	fi
-done
-
-echo +OK Anonymous Binary Built!
+# check
+check
