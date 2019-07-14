@@ -53,6 +53,15 @@ jobs:
       #
       - run: make product
 
+      # cross compiling tests
+      #  - linux + amd64
+      #  - linux + arm
+      #  - windows
+      #  - darwin  TODO
+      - run: make GOOS=linux   GOARCH=amd64 binary
+      - run: make GOOS=linux   GOARCH=arm   binary
+      - run: make GOOS=windows GOARCH=amd64 binary
+
       # setup optional envs & launch local cluster
       #
       # it is not possible to mount a folder from your job space into a container in Remote Docker

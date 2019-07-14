@@ -26,8 +26,10 @@
 
 # we've modified the:
 #   - vendor/github.com/prometheus/client_golang/prometheus/registry.go
+#   - vendor/github.com/felixge/tcpkeepalive/
 # and we don't expect `dep check` rolled this change back.
 # noverify = ["github.com/prometheus/client_golang"]
+noverify = ["github.com/felixge/tcpkeepalive"]
 
 
 # we doesn't need the vendor as the following isn't product codes

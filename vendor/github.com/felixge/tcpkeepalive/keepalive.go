@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"syscall"
 
 	"time"
 )
@@ -103,9 +102,4 @@ func SetKeepAlive(c net.Conn, idleTime time.Duration, count int, interval time.D
 	}
 
 	return nil
-}
-
-func setNonblock(fd int) error {
-	return os.NewSyscallError("setsockopt", syscall.SetNonblock(fd, true))
-
 }
