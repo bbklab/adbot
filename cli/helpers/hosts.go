@@ -298,7 +298,7 @@ func ResetAdbotHost() error {
 
 // internal
 //
-func getConfigFileLock() (*flock.FileLock, error) {
+func getConfigFileLock() (flock.FileLock, error) {
 	if _, err := os.Stat(LocalConfigFileLock); os.IsNotExist(err) {
 		if fd, _ := os.Create(LocalConfigFileLock); fd != nil {
 			fd.Close()
