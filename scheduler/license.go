@@ -183,6 +183,11 @@ func RenewLicense(combinedLicenseText string) error {
 		return fmt.Errorf("load license error: %v", err)
 	}
 
+	// ensure the license product
+	if lic.Product != lictypes.ProductAdbot {
+		return errors.New("unexpected license product")
+	}
+
 	// ensure current system time is not ahead than license created time
 	if time.Now().Before(lic.CreatedAt) {
 		return lictypes.ErrLicenseTimeahead
